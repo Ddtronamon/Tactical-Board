@@ -731,7 +731,7 @@
   /* ---- Edit panel ---- */
   .edit-panel{
     position:fixed;
-    width:225px;
+    width:280px;
     max-height:calc(100vh - 20px);
     overflow-y:auto;
     overflow-x:hidden;
@@ -742,7 +742,7 @@
     box-shadow: 0 12px 30px rgba(0,0,0,.55);
     z-index:100;
   }
-  .edit-panel.tabbed{ width:235px; }
+  .edit-panel.tabbed{ width:340px; }
   .edit-panel.hidden{ display:none; }
 
   .tab-strip{
@@ -811,12 +811,28 @@
   }
 
   .dash-status{
-    display:flex; align-items:center; gap:10px;
+    display:flex; align-items:center; gap:8px;
     background:var(--panel-2);
     border:1px solid var(--line);
     border-radius:8px;
-    padding:10px 12px;
+    padding:8px 10px;
+    margin-bottom:8px;
+  }
+  .dash-status-text{ flex:1; }
+  .dash-use-btn-inline{
+    padding:5px 10px;
+    font-size:11px;
+    white-space:nowrap;
+  }
+  .talent-slot{
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px;
     margin-bottom:10px;
+  }
+  .talent-slot-name{
+    font-size:11px; font-weight:800; letter-spacing:.4px; text-transform:uppercase;
+    color:var(--blue-bright); margin:0 0 8px;
   }
   .dash-pips{ display:flex; gap:5px; }
   .dash-pip{
@@ -951,7 +967,32 @@
     background:var(--panel); border:1px solid var(--line); border-radius:10px;
     padding:12px 16px; margin-bottom:10px;
   }
-  .roster-card-swatch{ width:24px; height:24px; border-radius:50%; border:2px solid rgba(255,255,255,.5); flex-shrink:0; }
+  .roster-card-swatch{ width:24px; height:24px; border-radius:50%; border:2px solid rgba(255,255,255,.5); flex-shrink:0; overflow:hidden; }
+  .roster-card-swatch img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+  .character-avatar-row{
+    display:flex; align-items:center; gap:14px;
+    padding:12px 0;
+    border-bottom:1px solid var(--line);
+    margin-bottom:14px;
+  }
+  .character-avatar-preview{
+    width:64px; height:64px;
+    border-radius:50%;
+    border:2px solid var(--line);
+    background:var(--panel-2);
+    overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px; font-weight:800; color:var(--muted);
+    flex-shrink:0;
+  }
+  .character-avatar-preview img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .character-avatar-controls{ flex:1; }
+  .character-avatar-upload-btn{
+    display:inline-block;
+    cursor:pointer;
+    margin-right:8px;
+  }
   .roster-card-info{ flex:1; }
   .roster-card-name{ font-weight:800; font-size:14px; }
   .roster-card-count{ font-size:11.5px; color:var(--muted); }
@@ -990,6 +1031,86 @@
     width:100%;
     margin:0 auto;
   }
+  .tutorial-layout{
+    display:flex;
+    gap:24px;
+    max-width:980px;
+    width:100%;
+    margin:0 auto;
+    align-items:flex-start;
+  }
+  .tutorial-sidebar{
+    flex:0 0 200px;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    position:sticky;
+    top:0;
+  }
+  .tutorial-sidebar-btn{
+    text-align:left;
+    background:none;
+    border:1px solid transparent;
+    color:var(--muted);
+    font-size:12.5px;
+    font-weight:700;
+    padding:9px 12px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  .tutorial-sidebar-btn:hover{ background:var(--panel-2); color:var(--text); }
+  .tutorial-sidebar-btn.active{ background:var(--blue); color:#fff; }
+  .tutorial-content{
+    flex:1;
+    min-width:0;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:22px 26px;
+  }
+  .tutorial-content h3{
+    margin:0 0 12px;
+    font-size:19px;
+    color:var(--blue-bright);
+  }
+  .tutorial-content p{
+    margin:0 0 12px;
+    line-height:1.6;
+    font-size:13.5px;
+    color:var(--text);
+  }
+  .tutorial-content ul{
+    margin:0 0 14px;
+    padding-left:20px;
+    line-height:1.7;
+    font-size:13.5px;
+  }
+  .tutorial-content li{ margin-bottom:4px; }
+  .tutorial-content strong{ color:var(--blue-bright); }
+  .tutorial-number{
+    display:inline-block;
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:5px;
+    padding:1px 7px;
+    font-weight:800;
+    font-size:12.5px;
+    color:var(--blue-bright);
+  }
+  .tutorial-subhead{
+    font-size:12px;
+    font-weight:800;
+    letter-spacing:.5px;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin:18px 0 8px;
+  }
+  .tutorial-subhead:first-of-type{ margin-top:0; }
+  @media (max-width: 720px){
+    .tutorial-layout{ flex-direction:column; }
+    .tutorial-sidebar{ flex-direction:row; flex-wrap:wrap; position:static; flex-basis:auto; }
+  }
+
   .team-stats-empty{
     color:var(--muted);
     font-size:13px;
@@ -1357,23 +1478,23 @@
 
   .stat-grid{
     display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:7px;
+    grid-template-columns:repeat(5, 1fr);
+    gap:5px;
     margin-top:2px;
   }
   .stat-row{
-    display:flex; align-items:center; justify-content:space-between; gap:6px;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
     background:var(--panel-2);
     border:1px solid var(--line);
     border-radius:6px;
-    padding:5px 8px;
+    padding:6px 2px;
   }
   .stat-row span{
-    font-size:11px; font-weight:800; letter-spacing:.5px;
+    font-size:10px; font-weight:800; letter-spacing:.3px;
     color:var(--text);
   }
   .stat-row input{
-    width:38px; text-align:center;
+    width:32px; text-align:center;
     background:var(--bg);
     border:1px solid var(--line);
     color:var(--text);
@@ -1807,6 +1928,7 @@
       <button class="btn hud-toggle-btn" id="zonesToggleBtn" type="button" title="Show/hide the shooting zone overlay on the field">Show Zones</button>
       <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" title="More options">&#9776;</button>
       <div class="header-secondary" id="headerSecondary">
+        <button class="btn" id="tutorialBtn" type="button">How to Play</button>
         <button class="btn" id="teamStatsBtn" type="button">Team Stats</button>
         <button class="btn" id="savesBtn" type="button">Saves</button>
         <button class="btn" id="conferenceBtn" type="button">Conference</button>
@@ -1823,7 +1945,7 @@
         </div>
         <button class="btn" id="addBlank">+ Blank Pin</button>
         <button class="btn" id="summonTeamBtn" type="button">Summon Team</button>
-        <button class="btn" id="teamEditorBtn" type="button">Team Editor</button>
+        <button class="btn" id="characterLibraryBtn" type="button">Characters</button>
         <button class="btn" id="storageDiagBtn" type="button" title="Tests personal and shared storage separately to isolate exactly what's failing">Test Storage</button>
         <button class="btn danger" id="clearAll">Clear Field</button>
       </div>
@@ -2055,37 +2177,98 @@
   </div>
 </div>
 
-<div class="team-stats-overlay hidden" id="teamEditorOverlay">
-  <div id="rosterListView">
+<div class="team-stats-overlay hidden" id="characterLibraryOverlay">
+  <div id="characterListView">
     <div class="team-stats-header">
-      <h2>Team Editor</h2>
+      <h2>Characters</h2>
       <div class="team-stats-header-actions">
-        <button class="btn" id="rosterNewBtn" type="button">+ New Roster</button>
-        <button class="btn" id="teamEditorBackBtn" type="button">&larr; Back to Board</button>
+        <button class="btn" id="characterNewBtn" type="button">+ New Character</button>
+        <button class="btn" id="characterLibraryBackBtn" type="button">&larr; Back to Board</button>
       </div>
     </div>
-    <div class="team-stats-body" id="rosterList">
-      <p class="team-stats-empty" id="rosterListEmpty">No rosters yet. Build one with "+ New Roster", then load it onto either side of the field whenever you need it.</p>
+    <div class="team-stats-body" id="characterList">
+      <p class="team-stats-empty" id="characterListEmpty">No characters yet. Build one with "+ New Character" &mdash; your stats, talents, and kit, ready to load onto any pin whenever you need them.</p>
     </div>
   </div>
 
-  <div id="rosterEditView" style="display:none;">
+  <div id="characterEditView" style="display:none;">
     <div class="team-stats-header">
-      <h2 id="rosterEditTitle">New Roster</h2>
+      <h2 id="characterEditTitle">New Character</h2>
       <div class="team-stats-header-actions">
-        <button class="btn" id="rosterAddPlayerBtn" type="button">+ Add Player</button>
-        <button class="btn" id="rosterSaveBtn" type="button">Save Roster</button>
-        <button class="btn" id="rosterCancelBtn" type="button">&larr; Cancel</button>
+        <button class="btn" id="characterSaveBtn" type="button">Save Character</button>
+        <button class="btn" id="characterCancelBtn" type="button">&larr; Cancel</button>
       </div>
     </div>
-    <div class="roster-team-header">
-      <input type="text" class="team-name-input" id="rosterNameInput" placeholder="Team name" maxlength="24">
-      <label>Kit</label>
-      <div class="swatches" id="rosterSwatches"></div>
-      <div class="swatches" id="rosterSwatches2"></div>
-      <div class="style-grid" id="rosterStyles"></div>
+
+    <div class="character-avatar-row">
+      <div class="character-avatar-preview" id="characterAvatarPreview">?</div>
+      <div class="character-avatar-controls">
+        <label class="btn character-avatar-upload-btn" for="characterAvatarInput">Upload Picture</label>
+        <input type="file" id="characterAvatarInput" accept="image/png,image/jpeg,image/webp" style="display:none;">
+        <button class="delete-btn" id="characterAvatarRemoveBtn" type="button" style="display:none;">Remove</button>
+        <p class="stat-hint" style="margin:4px 0 0;">Just for quickly telling characters apart &mdash; doesn't appear on the pin itself on the field.</p>
+      </div>
     </div>
-    <div class="roster-player-list" id="rosterPlayerList"></div>
+
+    <div class="roster-team-header">
+      <input type="text" class="team-name-input" id="characterNameInput" placeholder="Character name" maxlength="24">
+      <input type="text" class="team-name-input" id="characterNumberInput" placeholder="#" maxlength="2" inputmode="numeric" style="width:60px;">
+      <label>Position</label>
+      <select class="npc-select" id="characterPositionSelect">
+        <option value="Attackers">Attacker</option>
+        <option value="Midfielders">Midfielder</option>
+        <option value="Defenders">Defender</option>
+        <option value="Goalkeepers">Goalkeeper</option>
+      </select>
+    </div>
+    <label>Stats</label>
+    <div class="stat-grid" id="characterStatGrid"></div>
+    <label class="checkbox-row" style="margin-top:10px;">
+      <input type="checkbox" id="characterSpeedsterCheck">
+      <span>Speedster</span>
+    </label>
+    <label>Talent 1</label>
+    <select class="npc-select" id="characterTalentSelect">
+      <option value="">&mdash; None &mdash;</option>
+      <option value="Sniper Eyes">Sniper Eyes</option>
+      <option value="Assassin Eyes">Assassin Eyes</option>
+      <option value="Predator Eyes">Predator Eyes</option>
+      <option value="Meta-Vision">Meta-Vision</option>
+      <option value="Destroyer Eyes">Destroyer Eyes</option>
+    </select>
+    <label>Talent 2 <span style="font-weight:400; color:var(--muted);">(dual-eyes)</span></label>
+    <select class="npc-select" id="characterTalentSelect2">
+      <option value="">&mdash; None &mdash;</option>
+      <option value="Sniper Eyes">Sniper Eyes</option>
+      <option value="Assassin Eyes">Assassin Eyes</option>
+      <option value="Predator Eyes">Predator Eyes</option>
+      <option value="Meta-Vision">Meta-Vision</option>
+      <option value="Destroyer Eyes">Destroyer Eyes</option>
+    </select>
+
+    <div class="pane-divider"></div>
+    <label class="checkbox-row">
+      <input type="checkbox" id="characterNpcCheck">
+      <span>NPC Teammate</span>
+    </label>
+    <label>Team Sheet</label>
+    <select class="npc-select" id="characterNpcTeamSelect">
+      <option value="">&mdash; No team selected &mdash;</option>
+    </select>
+    <p class="stat-hint">When on, this character's rolls use that team sheet's stats for its position instead of its own stats above.</p>
+  </div>
+</div>
+
+<div class="team-stats-overlay hidden" id="tutorialOverlay">
+  <div class="team-stats-header">
+    <h2>How to Play</h2>
+    <div class="team-stats-header-actions">
+      <button class="btn" id="tutorialBackBtn" type="button">&larr; Back to Board</button>
+    </div>
+  </div>
+  <div class="tutorial-layout">
+    <div class="tutorial-sidebar" id="tutorialSidebar"></div>
+    <div class="tutorial-content" id="tutorialContent"></div>
   </div>
 </div>
 
@@ -2255,6 +2438,17 @@
         <input type="radio" name="pinTeam" id="pinTeamB" value="B"> Team B
       </label>
     </div>
+
+    <div class="pane-divider"></div>
+    <label>Load Character</label>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div class="character-avatar-preview" id="loadCharacterPreview" style="width:32px; height:32px; font-size:13px; flex-shrink:0;">?</div>
+      <select class="npc-select" id="loadCharacterSelect" style="flex:1;">
+        <option value="">&mdash; Choose a character &mdash;</option>
+      </select>
+    </div>
+    <button class="btn dash-use-btn" id="loadCharacterBtn" type="button">Load onto This Pin</button>
+    <p class="stat-hint">Copies that character's name, kit, stats, and talents onto this pin. Manage characters from the "Characters" button in the header.</p>
   </div>
 
   <div class="tab-pane" data-pane="kit" style="display:none;">
@@ -2272,7 +2466,7 @@
       <span>Speedster</span>
     </label>
 
-    <label>Talent (only one allowed)</label>
+    <label>Talent 1</label>
     <select class="npc-select" id="talentSelect">
       <option value="">&mdash; None &mdash;</option>
       <option value="Sniper Eyes">Sniper Eyes</option>
@@ -2281,7 +2475,16 @@
       <option value="Meta-Vision">Meta-Vision</option>
       <option value="Destroyer Eyes">Destroyer Eyes</option>
     </select>
-    <p class="stat-hint">Activated from the Talent tab in Play mode (Destroyer Eyes activates from the Flow tab instead).</p>
+    <label>Talent 2 <span style="font-weight:400; color:var(--muted);">(for dual-eyes characters)</span></label>
+    <select class="npc-select" id="talentSelect2">
+      <option value="">&mdash; None &mdash;</option>
+      <option value="Sniper Eyes">Sniper Eyes</option>
+      <option value="Assassin Eyes">Assassin Eyes</option>
+      <option value="Predator Eyes">Predator Eyes</option>
+      <option value="Meta-Vision">Meta-Vision</option>
+      <option value="Destroyer Eyes">Destroyer Eyes</option>
+    </select>
+    <p class="stat-hint">Activated from the Talent tab in Play mode (Destroyer Eyes activates from the Flow tab instead). Each talent's charges and activation are independent.</p>
   </div>
 
   <div class="tab-pane" data-pane="npc" style="display:none;">
@@ -2378,74 +2581,40 @@
     <div class="shot-type-list" id="d20List"></div>
 
     <div class="pane-divider"></div>
-    <label>Dribble Past</label>
     <button class="btn dash-use-btn" id="dribblePastBtn" type="button">Dribble Past a Defender</button>
     <p class="stat-hint" id="dribblePastNote">Costs 1 action. Uses your AGL vs their chosen stat &mdash; win and your next move gets a boost.</p>
 
     <div class="pane-divider"></div>
-    <label>Dash</label>
-    <div class="dash-status" id="dashStatus">
+    <div class="dash-status" id="dashStatus" title="Free — doesn't cost a turn. Boosts your move radius to 2.5 pins for your next move.">
       <div class="dash-pips" id="dashPips"></div>
       <span class="dash-status-text" id="dashStatusText">2 / 2 ready</span>
+      <button class="btn dash-use-btn-inline" id="useDashBtn" type="button">Dash</button>
     </div>
-    <button class="btn dash-use-btn" id="useDashBtn" type="button">Use Dash</button>
-    <p class="stat-hint">Free &mdash; doesn&rsquo;t cost a turn. Boosts your move radius to 2.5 pins for your next move.</p>
 
     <div id="superSprintSection" style="display:none;">
-      <label>Super Sprint <span class="tag-speedster">Speedster</span></label>
-      <div class="dash-status" id="superSprintStatus">
+      <div class="dash-status" id="superSprintStatus" title="Free, costs 1 Dash charge too. Straight line only (no diagonal), 3x radius. +1 chunk cooldown vs a normal Dash.">
         <div class="dash-pips" id="superSprintPips"></div>
         <span class="dash-status-text" id="superSprintStatusText">1 / 1 ready</span>
+        <button class="btn dash-use-btn-inline" id="useSuperSprintBtn" type="button">Sprint <span class="tag-speedster">SS</span></button>
       </div>
-      <button class="btn dash-use-btn" id="useSuperSprintBtn" type="button">Use Super Sprint</button>
-      <p class="stat-hint">Free, costs 1 Dash charge too. Straight line only (no diagonal), 3x radius. +1 chunk cooldown vs a normal Dash.</p>
     </div>
 
     <div id="metaDashSection" style="display:none;">
-      <label>Meta Dash <span class="tag-speedster">Meta-Vision</span></label>
-      <div class="dash-status" id="metaDashStatus">
+      <div class="dash-status" id="metaDashStatus" title="Free, doesn't touch your normal Dash charges. Weaker than Acceleration, stronger than a normal move. Only usable while Meta-Vision is active.">
         <div class="dash-pips" id="metaDashPips"></div>
         <span class="dash-status-text" id="metaDashStatusText">2 / 2 ready</span>
+        <button class="btn dash-use-btn-inline" id="useMetaDashBtn" type="button">Meta <span class="tag-speedster">MV</span></button>
       </div>
-      <button class="btn dash-use-btn" id="useMetaDashBtn" type="button">Use Meta Dash</button>
-      <p class="stat-hint">Free, doesn&rsquo;t touch your normal Dash charges. Weaker than Acceleration, stronger than a normal move. Only usable while Meta-Vision is active.</p>
     </div>
   </div>
 
   <div class="tab-pane" data-pane="talent" style="display:none;">
-    <div id="talentNone" style="display:none;">
+    <div id="talentNoneMsg" style="display:none;">
       <p class="stat-hint">No talent assigned. Set one in Edit mode's Character tab.</p>
     </div>
 
-    <div id="talentDestroyerNote" style="display:none;">
-      <p class="stat-hint">Destroyer Eyes only activates through Flow &mdash; see below.</p>
-    </div>
-
-    <div id="talentSimple" style="display:none;">
-      <div class="dash-status" id="talentStatus">
-        <div class="dash-pips" id="talentPips"></div>
-        <span class="dash-status-text" id="talentStatusText">10 / 10 left</span>
-      </div>
-      <button class="btn dash-use-btn" id="talentToggleBtn" type="button">Activate</button>
-      <p class="stat-hint" id="talentEffectNote"></p>
-      <button class="btn dash-use-btn" id="assassinClearBtn" type="button" style="display:none;">Clear the Ball</button>
-    </div>
-
-    <div id="talentPredator" style="display:none;">
-      <div class="dash-status" id="predatorStatus">
-        <div class="dash-pips" id="predatorPips"></div>
-        <span class="dash-status-text" id="predatorStatusText">4 / 4 left</span>
-      </div>
-      <button class="btn dash-use-btn" id="predatorActivateBtn" type="button">Activate Predator Eye</button>
-      <div id="predatorScoreAsk" style="display:none;">
-        <p class="stat-hint">Predator Eye is active. Did you score with it?</p>
-        <div class="team-stats-header-actions" style="justify-content:stretch; gap:8px;">
-          <button class="btn" id="predatorYesBtn" type="button" style="flex:1;">Yes &mdash; Lock It</button>
-          <button class="btn" id="predatorNoBtn" type="button" style="flex:1;">No &mdash; Keep Unlocked</button>
-        </div>
-      </div>
-      <p class="stat-hint">+15 ACC while active. 4 activations per match, or locked forever the moment you confirm a goal with it.</p>
-    </div>
+    <div id="talentSlot1" class="talent-slot" style="display:none;"></div>
+    <div id="talentSlot2" class="talent-slot" style="display:none;"></div>
 
     <div class="pane-divider"></div>
     <label>Flow</label>
@@ -2665,6 +2834,19 @@
     {id:'sash',      label:'Sash'}
   ];
 
+  // Picks readable black or white text for a pin's number based on its actual
+  // kit color, instead of always using white — white numbers were invisible
+  // on white/yellow/other light kits. Uses standard relative luminance.
+  function reactiveTextColor(hex){
+    if (!hex || hex[0] !== '#' || hex.length < 7) return '#ffffff';
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    const lin = c => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    const luminance = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+    return luminance > 0.42 ? '#111111' : '#ffffff';
+  }
+
   function kitBackground(color, color2, style){
     const c1 = color || '#2B6CD4';
     const c2 = color2 || '#FFFFFF';
@@ -2872,6 +3054,8 @@
       pins = [];
       maxChunkReached = Number(chunkValue.value) || 1;
       maxChunkResetAt = Date.now();
+      chunkSnapshots = {};
+      lastKnownChunkValue = Number(chunkValue.value) || 1;
       renderPins();
       closeEdit();
     } else {
@@ -2920,6 +3104,8 @@
     });
     maxChunkReached = Number(chunkValue.value) || 1; // otherwise a fresh match starting back at a low chunk would never trigger a refill until it climbed past whatever chunk the PREVIOUS match reached
     maxChunkResetAt = Date.now();
+    chunkSnapshots = {}; // clear chunk history — a fresh match shouldn't be able to "go back" into the previous one
+    lastKnownChunkValue = Number(chunkValue.value) || 1;
     const activePin = pins.find(p => p.id === activePinId);
     if (activePin && !playPanel.classList.contains('hidden')) {
       refreshDashDisplay(activePin);
@@ -3134,9 +3320,10 @@
     storageDiagRunBtn.textContent = 'Run Test';
   });
 
-  // ---- Character tab: Speedster + Talent (single select — buffs applied in Play mode) ----
+  // ---- Character tab: Speedster + Talent (dual select — buffs applied in Play mode) ----
   const speedsterCheck = document.getElementById('speedsterCheck');
   const talentSelect = document.getElementById('talentSelect');
+  const talentSelect2 = document.getElementById('talentSelect2');
 
   speedsterCheck.addEventListener('change', () => {
     const pin = pins.find(p => p.id === activePinId);
@@ -3144,13 +3331,8 @@
     pin.speedster = speedsterCheck.checked;
   });
 
-  talentSelect.addEventListener('change', () => {
-    const pin = pins.find(p => p.id === activePinId);
-    if (!pin) return;
-    pin.talent = talentSelect.value || null;
+  function resetSharedTalentState(pin){
     // switching talents clears any in-progress activation state from the old one
-    pin.talentActive = false;
-    pin.talentUsesLeft = 10;
     pin.predatorActive = false;
     pin.predatorCharges = 4;
     pin.predatorLocked = false;
@@ -3160,11 +3342,30 @@
     pin.destroyerTurnsLeft = 0;
     pin.metaDashCharges = 2;
     pin.metaDashCooldownChunks = 0;
+  }
+
+  talentSelect.addEventListener('change', () => {
+    const pin = pins.find(p => p.id === activePinId);
+    if (!pin) return;
+    pin.talent = talentSelect.value || null;
+    pin.talentActive = false;
+    pin.talentUsesLeft = 10;
+    resetSharedTalentState(pin);
+  });
+
+  talentSelect2.addEventListener('change', () => {
+    const pin = pins.find(p => p.id === activePinId);
+    if (!pin) return;
+    pin.talent2 = talentSelect2.value || null;
+    pin.talent2Active = false;
+    pin.talent2UsesLeft = 10;
+    resetSharedTalentState(pin);
   });
 
   function refreshCharacterTab(pin){
     speedsterCheck.checked = !!pin.speedster;
     talentSelect.value = pin.talent || '';
+    talentSelect2.value = pin.talent2 || '';
   }
 
   // ---- NPC tab ----
@@ -3236,6 +3437,7 @@
     ballCarrier: false, radiusMult: 1, accelerationLocked: false, mtlShotsResult: null,
     freeMoveUnlocked: false, dashCharges: 2, dashCooldownChunks: 0, speedster: false,
     talent: null, talentActive: false, talentUsesLeft: 10, assassinClearUsed: false,
+    talent2: null, talent2Active: false, talent2UsesLeft: 10, // second talent slot for dual-eyes characters — its own independent activation and charges
     predatorActive: false, predatorCharges: 4, predatorLocked: false,
     superSprintCharges: 1, superSprintCooldownChunks: 0,
     metaDashCharges: 2, metaDashCooldownChunks: 0, forwardOnlyMove: false,
@@ -3336,6 +3538,7 @@
 
     seat.className = 'bench-seat';
     seat.style.background = kitBackground(pin.color, pin.color2, pin.style);
+    seat.style.color = reactiveTextColor(pin.color);
     seat.textContent = pin.number || '';
     seat.title = pin.name || ('Sub #' + (pin.number || slot + 1));
     seat.dataset.id = pin.id;
@@ -3370,6 +3573,7 @@
       const seat = document.createElement('div');
       seat.className = 'bench-seat';
       seat.style.background = kitBackground(pin.color, pin.color2, pin.style);
+      seat.style.color = reactiveTextColor(pin.color);
       seat.textContent = pin.number || '';
       seat.title = (pin.name || 'Pin ' + pin.id) + ' \u2014 click to restore to the field';
       seat.style.cursor = 'pointer';
@@ -3442,6 +3646,7 @@
       el.style.left = (pendingMove ? pendingMove.x : pin.x) + '%';
       el.style.top = (pendingMove ? pendingMove.y : pin.y) + '%';
       el.style.background = kitBackground(pin.color, pin.color2, pin.style);
+      el.style.color = reactiveTextColor(pin.color);
       el.dataset.id = pin.id;
       el.textContent = pin.number || '';
       if (pendingMove) el.classList.add('pin-elevated'); // so its confirm buttons paint above neighboring pins/ball
@@ -4336,6 +4541,7 @@
     activePinId = id;
     const pin = pins.find(p => p.id === id);
     if (!pin) return;
+    refreshLoadCharacterDropdown();
 
     editName.value = pin.name || '';
     editNumber.value = pin.number || '';
@@ -4466,11 +4672,9 @@
     if (pin.dashCharges > 0) {
       dashStatusText.textContent = pin.dashCharges + ' / 2 ready';
       useDashBtn.disabled = false;
-      useDashBtn.textContent = 'Use Dash';
     } else {
       dashStatusText.textContent = 'Recharges in ' + pin.dashCooldownChunks + ' chunk' + (pin.dashCooldownChunks === 1 ? '' : 's');
       useDashBtn.disabled = true;
-      useDashBtn.textContent = 'On Cooldown';
     }
 
     superSprintSection.style.display = pin.speedster ? 'block' : 'none';
@@ -4483,38 +4687,32 @@
       if (pin.superSprintCharges > 0 && pin.dashCharges > 0) {
         superSprintStatusText.textContent = 'Ready';
         useSuperSprintBtn.disabled = false;
-        useSuperSprintBtn.textContent = 'Use Super Sprint';
       } else if (pin.superSprintCharges > 0) {
         superSprintStatusText.textContent = 'Needs a Dash charge too';
         useSuperSprintBtn.disabled = true;
-        useSuperSprintBtn.textContent = 'Use Super Sprint';
       } else {
         superSprintStatusText.textContent = 'Recharges in ' + pin.superSprintCooldownChunks + ' chunk' + (pin.superSprintCooldownChunks === 1 ? '' : 's');
         useSuperSprintBtn.disabled = true;
-        useSuperSprintBtn.textContent = 'On Cooldown';
       }
     }
 
-    metaDashSection.style.display = pin.talent === 'Meta-Vision' ? 'block' : 'none';
-    if (pin.talent === 'Meta-Vision') {
+    metaDashSection.style.display = pinHasTalent(pin, 'Meta-Vision') ? 'block' : 'none';
+    if (pinHasTalent(pin, 'Meta-Vision')) {
       metaDashPips.innerHTML = '';
       for (let i = 0; i < 2; i++) {
         const pip = document.createElement('span');
         pip.className = 'dash-pip' + (i < pin.metaDashCharges ? ' filled' : (pin.metaDashCooldownChunks > 0 ? ' cooldown' : ''));
         metaDashPips.appendChild(pip);
       }
-      if (!pin.talentActive) {
+      if (!isTalentActive(pin, 'Meta-Vision')) {
         metaDashStatusText.textContent = 'Activate Meta-Vision first';
         useMetaDashBtn.disabled = true;
-        useMetaDashBtn.textContent = 'Use Meta Dash';
       } else if (pin.metaDashCharges > 0) {
         metaDashStatusText.textContent = pin.metaDashCharges + ' / 2 ready';
         useMetaDashBtn.disabled = false;
-        useMetaDashBtn.textContent = 'Use Meta Dash';
       } else {
         metaDashStatusText.textContent = 'Used up for this match';
         useMetaDashBtn.disabled = true;
-        useMetaDashBtn.textContent = 'On Cooldown';
       }
     }
   }
@@ -4562,7 +4760,7 @@
     const pin = pins.find(p => p.id === activePinId);
     if (!pin || pin.dashCharges <= 0) return;
     pin.dashCharges -= 1;
-    pin.radiusMult = (pin.talent === 'Destroyer Eyes' && pin.destroyerActive) ? 3 : 2.5; // Dash: bigger than Acceleration's boost, free, no action spent
+    pin.radiusMult = (pinHasTalent(pin, 'Destroyer Eyes') && pin.destroyerActive) ? 3 : 2.5; // Dash: bigger than Acceleration's boost, free, no action spent
     pin.forwardOnlyMove = false;
     if (pin.dashCharges === 0) pin.dashCooldownChunks = 5;
     refreshDashDisplay(pin);
@@ -4587,11 +4785,13 @@
 
   useMetaDashBtn.addEventListener('click', () => {
     const pin = pins.find(p => p.id === activePinId);
-    if (!pin || pin.talent !== 'Meta-Vision' || !pin.talentActive) return;
-    if (pin.metaDashCharges <= 0 || pin.talentUsesLeft <= 0) return;
+    if (!pin) return;
+    const slotKey = pin.talent === 'Meta-Vision' ? 'talent' : (pin.talent2 === 'Meta-Vision' ? 'talent2' : null);
+    if (!slotKey || !pin[slotKey + 'Active']) return;
+    if (pin.metaDashCharges <= 0 || pin[slotKey + 'UsesLeft'] <= 0) return;
     pin.metaDashCharges -= 1;
-    pin.talentUsesLeft -= 1; // Meta Dash also spends 1 of the shared 10 Meta-Vision uses
-    if (pin.talentUsesLeft <= 0) pin.talentActive = false;
+    pin[slotKey + 'UsesLeft'] -= 1; // Meta Dash also spends 1 of that slot's shared 10 Meta-Vision uses
+    if (pin[slotKey + 'UsesLeft'] <= 0) pin[slotKey + 'Active'] = false;
     pin.radiusMult = 1.5; // weaker than Acceleration (2), stronger than a normal move (1)
     pin.forwardOnlyMove = false;
     // no cooldown — once both charges are gone, they stay gone until End Match
@@ -4610,23 +4810,47 @@
     'Meta-Vision': { stats: ['AGL', 'MTL', 'STR'], bonus: 10 }
   };
 
-  // Applies any active talent bonus for a given stat roll, draining shared/relevant
-  // charges as a side effect. Call this once per actual roll.
+  // True if either talent slot holds this talent — lets every existing
+  // single-talent check keep working correctly regardless of which slot
+  // a dual-talent character's ability happens to occupy.
+  function pinHasTalent(pin, name){
+    return pin.talent === name || pin.talent2 === name;
+  }
+
+  // True if this specific talent is both assigned (in either slot) AND
+  // currently toggled active — used anywhere a mechanic cares whether a
+  // named talent's buff is live right now, regardless of which slot holds it.
+  function isTalentActive(pin, name){
+    return (pin.talent === name && pin.talentActive) || (pin.talent2 === name && pin.talent2Active);
+  }
+
+  // Applies any active talent bonus(es) for a given stat roll, draining
+  // shared/relevant charges as a side effect. Call this once per actual roll.
+  // A dual-talent pin's two slots are fully independent — if both happen to
+  // buff the same stat, both bonuses stack, rather than only the higher one
+  // counting. Two Talented Eyes is meant to be stronger than one.
   function applyTalentBuff(pin, statKey){
     let bonus = 0;
 
-    const simple = pin.talent && SIMPLE_TALENT_STATS[pin.talent];
-    if (simple && pin.talentActive && pin.talentUsesLeft > 0 && simple.stats.includes(statKey)) {
-      bonus += simple.bonus;
+    const simple1 = pin.talent && SIMPLE_TALENT_STATS[pin.talent];
+    if (simple1 && pin.talentActive && pin.talentUsesLeft > 0 && simple1.stats.includes(statKey)) {
+      bonus += simple1.bonus;
       pin.talentUsesLeft -= 1;
       if (pin.talentUsesLeft <= 0) pin.talentActive = false;
     }
 
-    if (pin.talent === 'Predator Eyes' && pin.predatorActive && statKey === 'ACC') {
+    const simple2 = pin.talent2 && SIMPLE_TALENT_STATS[pin.talent2];
+    if (simple2 && pin.talent2Active && pin.talent2UsesLeft > 0 && simple2.stats.includes(statKey)) {
+      bonus += simple2.bonus;
+      pin.talent2UsesLeft -= 1;
+      if (pin.talent2UsesLeft <= 0) pin.talent2Active = false;
+    }
+
+    if (pinHasTalent(pin, 'Predator Eyes') && pin.predatorActive && statKey === 'ACC') {
       bonus += 15;
     }
 
-    if (pin.talent === 'Destroyer Eyes' && pin.destroyerActive && (statKey === 'ACC' || statKey === 'STR' || statKey === 'AGL')) {
+    if (pinHasTalent(pin, 'Destroyer Eyes') && pin.destroyerActive && (statKey === 'ACC' || statKey === 'STR' || statKey === 'AGL')) {
       bonus += 20;
     }
 
@@ -4636,31 +4860,19 @@
   // Opponent-facing debuffs applied to a CHALLENGER's roll based on the TARGET's active talents.
   function getOpponentTalentDebuff(challenger, target){
     let debuff = 0;
-    if (target.talent === 'Meta-Vision' && target.talentActive && !(challenger.talent === 'Meta-Vision' && challenger.talentActive)) {
+    if (isTalentActive(target, 'Meta-Vision') && !isTalentActive(challenger, 'Meta-Vision')) {
       debuff -= 5; // -5 STR/AGL against them unless the challenger also has Meta-Vision active
     }
-    if (target.talent === 'Destroyer Eyes' && target.destroyerActive) {
+    if (pinHasTalent(target, 'Destroyer Eyes') && target.destroyerActive) {
       debuff -= 5; // -5 to all defensive rolls in a 1v1 against them
     }
     return debuff;
   }
 
   // ---- Talent tab (Sniper / Assassin / Meta-Vision / Predator / Destroyer note) ----
-  const talentNone = document.getElementById('talentNone');
-  const talentDestroyerNote = document.getElementById('talentDestroyerNote');
-  const talentSimple = document.getElementById('talentSimple');
-  const talentPredator = document.getElementById('talentPredator');
-  const talentPips = document.getElementById('talentPips');
-  const talentStatusText = document.getElementById('talentStatusText');
-  const talentToggleBtn = document.getElementById('talentToggleBtn');
-  const talentEffectNote = document.getElementById('talentEffectNote');
-  const assassinClearBtn = document.getElementById('assassinClearBtn');
-  const predatorPips = document.getElementById('predatorPips');
-  const predatorStatusText = document.getElementById('predatorStatusText');
-  const predatorActivateBtn = document.getElementById('predatorActivateBtn');
-  const predatorScoreAsk = document.getElementById('predatorScoreAsk');
-  const predatorYesBtn = document.getElementById('predatorYesBtn');
-  const predatorNoBtn = document.getElementById('predatorNoBtn');
+  const talentNoneMsg = document.getElementById('talentNoneMsg');
+  const talentSlot1El = document.getElementById('talentSlot1');
+  const talentSlot2El = document.getElementById('talentSlot2');
 
   const TALENT_EFFECT_NOTES = {
     'Sniper Eyes': '+10 ACC, +10 MTL while active. 10 shared uses per match, drained by each buffed roll.',
@@ -4677,98 +4889,164 @@
     }
   }
 
-  function refreshTalentTab(pin){
-    talentNone.style.display = 'none';
-    talentDestroyerNote.style.display = 'none';
-    talentSimple.style.display = 'none';
-    talentPredator.style.display = 'none';
+  // Builds one talent slot's UI dynamically based on whichever talent actually
+  // occupies it — slotKey is 'talent' (slot 1) or 'talent2' (slot 2). Returns
+  // null if that slot is empty. Predator/Destroyer/Assassin's special state
+  // (predatorActive, etc.) is shared regardless of slot, since a pin can only
+  // meaningfully hold each specific talent once.
+  function buildTalentSlotContent(pin, slotKey){
+    const talentName = pin[slotKey];
+    if (!talentName) return null;
+    const activeKey = slotKey + 'Active';
+    const usesKey = slotKey + 'UsesLeft';
 
-    if (!pin.talent) {
-      talentNone.style.display = 'block';
-      return;
+    const wrap = document.createElement('div');
+    const nameEl = document.createElement('p');
+    nameEl.className = 'talent-slot-name';
+    nameEl.textContent = talentName;
+    wrap.appendChild(nameEl);
+
+    if (talentName === 'Destroyer Eyes') {
+      const note = document.createElement('p');
+      note.className = 'stat-hint';
+      note.textContent = 'Only activates through Flow \u2014 see below.';
+      wrap.appendChild(note);
+      return wrap;
     }
-    if (pin.talent === 'Destroyer Eyes') {
-      talentDestroyerNote.style.display = 'block';
-      return;
-    }
-    if (pin.talent === 'Predator Eyes') {
-      talentPredator.style.display = 'block';
-      renderPipRow(predatorPips, pin.predatorCharges, 4);
+
+    if (talentName === 'Predator Eyes') {
+      const status = document.createElement('div');
+      status.className = 'dash-status';
+      const pips = document.createElement('div');
+      pips.className = 'dash-pips';
+      renderPipRow(pips, pin.predatorCharges, 4);
+      const statusText = document.createElement('span');
+      statusText.className = 'dash-status-text';
+      status.appendChild(pips);
+      status.appendChild(statusText);
+      wrap.appendChild(status);
+
       if (pin.predatorLocked) {
-        predatorStatusText.textContent = 'Locked (scored with it)';
-        predatorActivateBtn.style.display = 'none';
-        predatorScoreAsk.style.display = 'none';
+        statusText.textContent = 'Locked (scored with it)';
       } else if (pin.predatorActive) {
-        predatorStatusText.textContent = 'Active \u2014 ' + pin.predatorCharges + ' / 4 left';
-        predatorActivateBtn.style.display = 'none';
-        predatorScoreAsk.style.display = 'block';
+        statusText.textContent = 'Active \u2014 ' + pin.predatorCharges + ' / 4 left';
+        const askP = document.createElement('p');
+        askP.className = 'stat-hint';
+        askP.textContent = 'Predator Eye is active. Did you score with it?';
+        wrap.appendChild(askP);
+        const btnRow = document.createElement('div');
+        btnRow.className = 'team-stats-header-actions';
+        btnRow.style.justifyContent = 'stretch';
+        btnRow.style.gap = '8px';
+        const yesBtn = document.createElement('button');
+        yesBtn.className = 'btn'; yesBtn.type = 'button'; yesBtn.style.flex = '1';
+        yesBtn.textContent = 'Yes \u2014 Lock It';
+        yesBtn.addEventListener('click', () => {
+          pin.predatorActive = false;
+          pin.predatorLocked = true; // scored with it — locked for the rest of the match
+          refreshTalentTab(pin);
+          renderPins();
+        });
+        const noBtn = document.createElement('button');
+        noBtn.className = 'btn'; noBtn.type = 'button'; noBtn.style.flex = '1';
+        noBtn.textContent = 'No \u2014 Keep Unlocked';
+        noBtn.addEventListener('click', () => {
+          pin.predatorActive = false; // stays unlocked — can activate again if charges remain
+          refreshTalentTab(pin);
+          renderPins();
+        });
+        btnRow.appendChild(yesBtn);
+        btnRow.appendChild(noBtn);
+        wrap.appendChild(btnRow);
       } else {
-        predatorStatusText.textContent = pin.predatorCharges + ' / 4 left';
-        predatorActivateBtn.style.display = pin.predatorCharges > 0 ? 'block' : 'none';
-        predatorScoreAsk.style.display = 'none';
+        statusText.textContent = pin.predatorCharges + ' / 4 left';
+        if (pin.predatorCharges > 0) {
+          const activateBtn = document.createElement('button');
+          activateBtn.className = 'btn dash-use-btn';
+          activateBtn.type = 'button';
+          activateBtn.textContent = 'Activate Predator Eye';
+          activateBtn.addEventListener('click', () => {
+            pin.predatorActive = true;
+            pin.predatorCharges -= 1;
+            refreshTalentTab(pin);
+            renderPins();
+          });
+          wrap.appendChild(activateBtn);
+        }
       }
-      return;
+      const note = document.createElement('p');
+      note.className = 'stat-hint';
+      note.textContent = '+15 ACC while active. 4 activations per match, or locked forever the moment you confirm a goal with it.';
+      wrap.appendChild(note);
+      return wrap;
     }
 
     // Sniper Eyes / Assassin Eyes / Meta-Vision
-    talentSimple.style.display = 'block';
-    renderPipRow(talentPips, pin.talentUsesLeft, 10);
-    talentStatusText.textContent = pin.talentUsesLeft + ' / 10 left';
-    talentEffectNote.textContent = TALENT_EFFECT_NOTES[pin.talent] || '';
-    talentToggleBtn.disabled = pin.talentUsesLeft <= 0;
-    talentToggleBtn.textContent = pin.talentUsesLeft <= 0 ? 'Used Up' : (pin.talentActive ? 'Deactivate' : 'Activate');
-    talentToggleBtn.classList.toggle('active', pin.talentActive);
+    const status = document.createElement('div');
+    status.className = 'dash-status';
+    const pips = document.createElement('div');
+    pips.className = 'dash-pips';
+    renderPipRow(pips, pin[usesKey], 10);
+    const statusText = document.createElement('span');
+    statusText.className = 'dash-status-text';
+    statusText.textContent = pin[usesKey] + ' / 10 left';
+    status.appendChild(pips);
+    status.appendChild(statusText);
+    wrap.appendChild(status);
 
-    assassinClearBtn.style.display = pin.talent === 'Assassin Eyes' ? 'block' : 'none';
-    if (pin.talent === 'Assassin Eyes') {
-      assassinClearBtn.disabled = pin.assassinClearUsed;
-      assassinClearBtn.textContent = pin.assassinClearUsed ? 'Ball Cleared (used)' : 'Clear the Ball';
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'btn dash-use-btn';
+    toggleBtn.type = 'button';
+    toggleBtn.disabled = pin[usesKey] <= 0;
+    toggleBtn.textContent = pin[usesKey] <= 0 ? 'Used Up' : (pin[activeKey] ? 'Deactivate' : 'Activate');
+    toggleBtn.classList.toggle('active', pin[activeKey]);
+    toggleBtn.addEventListener('click', () => {
+      if (pin[usesKey] <= 0) return;
+      pin[activeKey] = !pin[activeKey];
+      refreshTalentTab(pin);
+      refreshDashDisplay(pin); // Meta Dash section availability depends on talentActive
+      renderPins();
+    });
+    wrap.appendChild(toggleBtn);
+
+    const note = document.createElement('p');
+    note.className = 'stat-hint';
+    note.textContent = TALENT_EFFECT_NOTES[talentName] || '';
+    wrap.appendChild(note);
+
+    if (talentName === 'Assassin Eyes') {
+      const clearBtn = document.createElement('button');
+      clearBtn.className = 'btn dash-use-btn';
+      clearBtn.type = 'button';
+      clearBtn.disabled = pin.assassinClearUsed;
+      clearBtn.textContent = pin.assassinClearUsed ? 'Ball Cleared (used)' : 'Clear the Ball';
+      clearBtn.addEventListener('click', () => {
+        if (pin.assassinClearUsed) return;
+        pin.assassinClearUsed = true;
+        pins.forEach(p => { p.ballCarrier = false; }); // instantly clear the ball — loose ball, no one carries it
+        refreshTalentTab(pin);
+        renderPins();
+      });
+      wrap.appendChild(clearBtn);
     }
+
+    return wrap;
   }
 
-  talentToggleBtn.addEventListener('click', () => {
-    const pin = pins.find(p => p.id === activePinId);
-    if (!pin || pin.talentUsesLeft <= 0) return;
-    pin.talentActive = !pin.talentActive;
-    refreshTalentTab(pin);
-    refreshDashDisplay(pin); // Meta Dash section availability depends on talentActive
-    renderPins();
-  });
+  function refreshTalentTab(pin){
+    const slot1Content = buildTalentSlotContent(pin, 'talent');
+    const slot2Content = buildTalentSlotContent(pin, 'talent2');
 
-  assassinClearBtn.addEventListener('click', () => {
-    const pin = pins.find(p => p.id === activePinId);
-    if (!pin || pin.assassinClearUsed) return;
-    pin.assassinClearUsed = true;
-    pins.forEach(p => { p.ballCarrier = false; }); // instantly clear the ball — loose ball, no one carries it
-    refreshTalentTab(pin);
-    renderPins();
-  });
+    talentNoneMsg.style.display = (!slot1Content && !slot2Content) ? 'block' : 'none';
 
-  predatorActivateBtn.addEventListener('click', () => {
-    const pin = pins.find(p => p.id === activePinId);
-    if (!pin || pin.predatorLocked || pin.predatorCharges <= 0) return;
-    pin.predatorActive = true;
-    pin.predatorCharges -= 1;
-    refreshTalentTab(pin);
-    renderPins();
-  });
+    talentSlot1El.innerHTML = '';
+    if (slot1Content) { talentSlot1El.appendChild(slot1Content); talentSlot1El.style.display = 'block'; }
+    else talentSlot1El.style.display = 'none';
 
-  predatorYesBtn.addEventListener('click', () => {
-    const pin = pins.find(p => p.id === activePinId);
-    if (!pin) return;
-    pin.predatorActive = false;
-    pin.predatorLocked = true; // scored with it — locked for the rest of the match
-    refreshTalentTab(pin);
-    renderPins();
-  });
-
-  predatorNoBtn.addEventListener('click', () => {
-    const pin = pins.find(p => p.id === activePinId);
-    if (!pin) return;
-    pin.predatorActive = false; // stays unlocked — can activate again if charges remain
-    refreshTalentTab(pin);
-    renderPins();
-  });
+    talentSlot2El.innerHTML = '';
+    if (slot2Content) { talentSlot2El.appendChild(slot2Content); talentSlot2El.style.display = 'block'; }
+    else talentSlot2El.style.display = 'none';
+  }
 
   // ---- Flow tab (phased duration + cooldown, plus Destroyer Eyes) ----
   const flowStatusText = document.getElementById('flowStatusText');
@@ -4818,7 +5096,7 @@
       flowToggleBtn.disabled = false;
     }
 
-    const showDestroyer = pin.talent === 'Destroyer Eyes';
+    const showDestroyer = pinHasTalent(pin, 'Destroyer Eyes');
     destroyerSection.style.display = showDestroyer ? 'block' : 'none';
     if (showDestroyer) {
       if (pin.destroyerActive) {
@@ -4870,7 +5148,7 @@
 
   enterDestroyerBtn.addEventListener('click', () => {
     const pin = pins.find(p => p.id === activePinId);
-    if (!pin || pin.talent !== 'Destroyer Eyes') return;
+    if (!pin || !pinHasTalent(pin, 'Destroyer Eyes')) return;
     if (!pin.flowActive || pin.destroyerUsed || pin.destroyerActive) return;
     pin.destroyerActive = true;
     pin.destroyerUsed = true;
@@ -5875,6 +6153,37 @@
     });
   }
 
+  // ---- Chunk snapshots: each chunk remembers exactly how the board looked
+  // the last time you left it. Navigating to ANY chunk (forward OR back)
+  // restores that chunk's own snapshot rather than just leaving things be —
+  // so accidentally stepping back a chunk (or deliberately going back to add
+  // a forgotten action) reverts pins/ball/score to that moment, and stepping
+  // back to where you were returns exactly what was there before. Cleared
+  // entirely by End Match, same as the rest of a match's live state. ----
+  let chunkSnapshots = {}; // chunk number -> { pins, ball, shots, scoreA, scoreB }
+
+  function snapshotCurrentChunk(chunkNum){
+    chunkSnapshots[chunkNum] = {
+      pins: JSON.parse(JSON.stringify(pins)),
+      ball: JSON.parse(JSON.stringify(ball)),
+      shots: JSON.parse(JSON.stringify(shots)),
+      scoreA: scoreA.value,
+      scoreB: scoreB.value
+    };
+  }
+
+  function restoreChunkSnapshot(chunkNum){
+    const snap = chunkSnapshots[chunkNum];
+    if (!snap) return false; // no snapshot yet for this chunk
+    pins = snap.pins.map(normalizePin);
+    ball = snap.ball;
+    shots = snap.shots;
+    scoreA.value = snap.scoreA;
+    scoreB.value = snap.scoreB;
+    syncMiniHud();
+    return true;
+  }
+
   const modeEditBtn = document.getElementById('modeEditBtn');
   const modePlayBtn = document.getElementById('modePlayBtn');
 
@@ -5969,6 +6278,30 @@
   const TEAM_STAT_KEYS = ['ACC', 'AGL', 'STR', 'SPD', 'MTL'];
   let teams = [];
   let teamIdSeq = 1;
+
+  // ---- Persistent library: Team Stat Sheets + Character Library survive
+  // a page reload / code update, and persist on ANY device that ever
+  // receives them (host or guest) — stored in the browser's own localStorage,
+  // tied to this site's address, not to any particular deploy of the file.
+  // Deliberately scoped to just these two — live match state (pins, score,
+  // chunk) stays session-only, as before.
+  const LOCAL_LIBRARY_KEY = 'blc_persistent_library';
+  function persistTeamsAndRostersLocally(){
+    try {
+      localStorage.setItem(LOCAL_LIBRARY_KEY, JSON.stringify({ teams, teamIdSeq, characters, characterIdSeq }));
+    } catch (e) { /* private browsing / storage disabled — nothing we can do */ }
+  }
+  function loadTeamsAndRostersFromLocal(){
+    try {
+      const raw = localStorage.getItem(LOCAL_LIBRARY_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (Array.isArray(saved.teams)) teams = saved.teams;
+      if (typeof saved.teamIdSeq === 'number') teamIdSeq = saved.teamIdSeq;
+      if (Array.isArray(saved.characters)) characters = saved.characters;
+      if (typeof saved.characterIdSeq === 'number') characterIdSeq = saved.characterIdSeq;
+    } catch (e) { /* corrupted or unavailable — just start with an empty library */ }
+  }
 
   const teamStatsOverlay = document.getElementById('teamStatsOverlay');
   const teamsList = document.getElementById('teamsList');
@@ -6104,13 +6437,13 @@
   function noteObservedTimestamp(ts){
     if (typeof ts === 'number' && ts > highestKnownTimestamp) highestKnownTimestamp = ts;
   }
-  let rosterTeams = []; // [{id, name, color, color2, style, players:[{name,number,position,stats,npc,talent,speedster}]}]
-  let rosterTeamIdSeq = 1;
+  let characters = []; // [{id, name, number, color, color2, style, position, stats:{ACC,AGL,STR,SPD,MTL}, talent, talent2, speedster}] — a personal library, not team-bundled
+  let characterIdSeq = 1;
 
   const savesOverlay = document.getElementById('savesOverlay');
   const savesList = document.getElementById('savesList');
   const savesEmpty = document.getElementById('savesEmpty');
-  const rosterListEmpty = document.getElementById('rosterListEmpty');
+  const characterListEmpty = document.getElementById('characterListEmpty');
 
   function renderSaves(){
     markDirty();
@@ -6206,220 +6539,158 @@
   });
 
   // ============================================================
-  // Team Editor — build a full roster (position, individual stats,
-  // NPC flag, talent, speedster per player), save it, then load it
-  // onto either side of the field whenever needed.
+  // Character Library — a personal library of individual characters
+  // (name, number, kit, position, stats, up to 2 talents, speedster),
+  // saved once and reusable across any pin, any session. These are
+  // standalone characters, not bundled into teams — applied to a pin
+  // from that pin's own Info tab (see "Load Character" below).
   // ============================================================
-  const teamEditorOverlay = document.getElementById('teamEditorOverlay');
-  const rosterListView = document.getElementById('rosterListView');
-  const rosterEditView = document.getElementById('rosterEditView');
-  let editingRoster = null;
-  let editingRosterIsNew = true;
+  const characterLibraryOverlay = document.getElementById('characterLibraryOverlay');
+  const characterListView = document.getElementById('characterListView');
+  const characterEditView = document.getElementById('characterEditView');
+  let editingCharacter = null;
+  let editingCharacterIsNew = true;
 
-  function blankRosterPlayer(){
-    return { name: '', number: '', position: 'Attackers', stats: { ACC: 0, AGL: 0, STR: 0, SPD: 0, MTL: 0 }, npc: false, talent: '', speedster: false };
+  function blankCharacter(){
+    return {
+      id: null, name: '', number: '', position: 'Attackers',
+      stats: { ACC: 0, AGL: 0, STR: 0, SPD: 0, MTL: 0 },
+      speedster: false, talent: null, talent2: null,
+      avatar: null, // small compressed data URL, purely cosmetic — never shown on the field itself
+      npc: false, npcTeamId: null
+    };
   }
 
-  function renderRosterSwatches(){
-    const sw1 = document.getElementById('rosterSwatches');
-    const sw2 = document.getElementById('rosterSwatches2');
-    const styleGrid = document.getElementById('rosterStyles');
-    sw1.innerHTML = ''; sw2.innerHTML = ''; styleGrid.innerHTML = '';
-
-    COLORS.forEach(color => {
-      const s = document.createElement('div');
-      s.className = 'swatch';
-      s.style.background = color;
-      s.classList.toggle('active', color === editingRoster.color);
-      s.addEventListener('click', () => { editingRoster.color = color; renderRosterSwatches(); });
-      sw1.appendChild(s);
-    });
-    COLORS.forEach(color => {
-      const s = document.createElement('div');
-      s.className = 'swatch';
-      s.style.background = color;
-      s.classList.toggle('active', color === editingRoster.color2);
-      s.addEventListener('click', () => { editingRoster.color2 = color; renderRosterSwatches(); });
-      sw2.appendChild(s);
-    });
-    STYLES.forEach(style => {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'style-btn';
-      b.classList.toggle('active', style.id === editingRoster.style);
-      const preview = document.createElement('div');
-      preview.className = 'style-swatch';
-      preview.style.background = kitBackground(editingRoster.color, editingRoster.color2, style.id);
-      const label = document.createElement('span');
-      label.textContent = style.label;
-      b.appendChild(preview);
-      b.appendChild(label);
-      b.addEventListener('click', () => { editingRoster.style = style.id; renderRosterSwatches(); });
-      styleGrid.appendChild(b);
-    });
-  }
-
-  function buildRosterPlayerRow(player, idx){
-    const row = document.createElement('div');
-    row.className = 'roster-player-row';
-
-    const nameInput = document.createElement('input');
-    nameInput.type = 'text'; nameInput.className = 'roster-name'; nameInput.placeholder = 'Name'; nameInput.value = player.name;
-    nameInput.addEventListener('input', () => { player.name = nameInput.value; });
-
-    const numInput = document.createElement('input');
-    numInput.type = 'text'; numInput.className = 'roster-number'; numInput.placeholder = '#'; numInput.maxLength = 2; numInput.value = player.number;
-    numInput.addEventListener('input', () => {
-      player.number = numInput.value.replace(/[^0-9]/g, '').slice(0, 2);
-      numInput.value = player.number;
-    });
-
-    const posSelect = document.createElement('select');
-    [['Attackers', 'Attacker'], ['Midfielders', 'Midfielder'], ['Defenders', 'Defender'], ['Goalkeepers', 'Goalkeeper']].forEach(([val, label]) => {
-      const opt = document.createElement('option');
-      opt.value = val; opt.textContent = label;
-      posSelect.appendChild(opt);
-    });
-    posSelect.value = player.position;
-    posSelect.addEventListener('change', () => { player.position = posSelect.value; });
-
-    const statsWrap = document.createElement('div');
-    statsWrap.className = 'roster-stats';
+  function renderCharacterStatGrid(){
+    const grid = document.getElementById('characterStatGrid');
+    grid.innerHTML = '';
     STAT_KEYS.forEach(key => {
-      const statInput = document.createElement('input');
-      statInput.type = 'text'; statInput.className = 'roster-stat'; statInput.title = key; statInput.placeholder = key;
-      statInput.value = player.stats[key] || 0;
-      statInput.addEventListener('input', () => {
-        const v = statInput.value.replace(/[^0-9]/g, '').slice(0, 2);
-        statInput.value = v;
-        player.stats[key] = v === '' ? 0 : Number(v);
+      const row = document.createElement('div');
+      row.className = 'stat-row';
+      const label = document.createElement('span');
+      label.textContent = key;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.inputMode = 'numeric';
+      input.maxLength = 2;
+      input.value = editingCharacter.stats[key] || 0;
+      input.addEventListener('input', () => {
+        const v = input.value.replace(/[^0-9]/g, '').slice(0, 2);
+        input.value = v;
+        editingCharacter.stats[key] = v === '' ? 0 : Number(v);
       });
-      statsWrap.appendChild(statInput);
+      row.appendChild(label);
+      row.appendChild(input);
+      grid.appendChild(row);
     });
-
-    const npcLabel = document.createElement('label');
-    npcLabel.className = 'roster-check';
-    const npcCheck = document.createElement('input');
-    npcCheck.type = 'checkbox'; npcCheck.checked = !!player.npc;
-    npcCheck.addEventListener('change', () => { player.npc = npcCheck.checked; });
-    npcLabel.appendChild(npcCheck);
-    npcLabel.appendChild(document.createTextNode('NPC'));
-
-    const talentSelect = document.createElement('select');
-    const noneOpt = document.createElement('option');
-    noneOpt.value = ''; noneOpt.textContent = 'No Talent';
-    talentSelect.appendChild(noneOpt);
-    ['Sniper Eyes', 'Assassin Eyes', 'Predator Eyes', 'Meta-Vision', 'Destroyer Eyes'].forEach(t => {
-      const opt = document.createElement('option');
-      opt.value = t; opt.textContent = t;
-      talentSelect.appendChild(opt);
-    });
-    talentSelect.value = player.talent || '';
-    talentSelect.addEventListener('change', () => { player.talent = talentSelect.value || ''; });
-
-    const speedLabel = document.createElement('label');
-    speedLabel.className = 'roster-check';
-    const speedCheck = document.createElement('input');
-    speedCheck.type = 'checkbox'; speedCheck.checked = !!player.speedster;
-    speedCheck.addEventListener('change', () => { player.speedster = speedCheck.checked; });
-    speedLabel.appendChild(speedCheck);
-    speedLabel.appendChild(document.createTextNode('Speed'));
-
-    const removeBtn = document.createElement('button');
-    removeBtn.type = 'button'; removeBtn.className = 'roster-remove'; removeBtn.textContent = '\u2715';
-    removeBtn.title = 'Remove this player';
-    removeBtn.addEventListener('click', () => {
-      editingRoster.players.splice(idx, 1);
-      renderRosterPlayerRows();
-    });
-
-    row.appendChild(nameInput);
-    row.appendChild(numInput);
-    row.appendChild(posSelect);
-    row.appendChild(statsWrap);
-    row.appendChild(npcLabel);
-    row.appendChild(talentSelect);
-    row.appendChild(speedLabel);
-    row.appendChild(removeBtn);
-    return row;
   }
 
-  function renderRosterPlayerRows(){
-    const list = document.getElementById('rosterPlayerList');
-    list.innerHTML = '';
-    editingRoster.players.forEach((player, idx) => list.appendChild(buildRosterPlayerRow(player, idx)));
-  }
-
-  function openRosterEditor(roster){
-    if (roster) {
-      editingRoster = JSON.parse(JSON.stringify(roster)); // edit a copy — only commit on Save
-      editingRosterIsNew = false;
+  function refreshCharacterAvatarPreview(){
+    const preview = document.getElementById('characterAvatarPreview');
+    const removeBtn = document.getElementById('characterAvatarRemoveBtn');
+    if (editingCharacter.avatar) {
+      preview.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = editingCharacter.avatar;
+      preview.appendChild(img);
+      removeBtn.style.display = 'inline-block';
     } else {
-      editingRoster = { id: null, name: '', color: COLORS[8], color2: '#FFFFFF', style: 'solid', players: [blankRosterPlayer()] };
-      editingRosterIsNew = true;
+      preview.textContent = '?';
+      removeBtn.style.display = 'none';
     }
-    document.getElementById('rosterEditTitle').textContent = editingRosterIsNew ? 'New Roster' : 'Edit Roster';
-    document.getElementById('rosterNameInput').value = editingRoster.name;
-    renderRosterSwatches();
-    renderRosterPlayerRows();
-    rosterListView.style.display = 'none';
-    rosterEditView.style.display = 'block';
   }
 
-  function closeRosterEditor(){
-    editingRoster = null;
-    rosterEditView.style.display = 'none';
-    rosterListView.style.display = 'block';
+  function openCharacterEditor(character){
+    if (character) {
+      editingCharacter = JSON.parse(JSON.stringify(character)); // edit a copy — only commit on Save
+      editingCharacterIsNew = false;
+    } else {
+      editingCharacter = blankCharacter();
+      editingCharacterIsNew = true;
+    }
+    document.getElementById('characterEditTitle').textContent = editingCharacterIsNew ? 'New Character' : 'Edit Character';
+    document.getElementById('characterNameInput').value = editingCharacter.name;
+    document.getElementById('characterNumberInput').value = editingCharacter.number;
+    document.getElementById('characterPositionSelect').value = editingCharacter.position;
+    document.getElementById('characterSpeedsterCheck').checked = !!editingCharacter.speedster;
+    document.getElementById('characterTalentSelect').value = editingCharacter.talent || '';
+    document.getElementById('characterTalentSelect2').value = editingCharacter.talent2 || '';
+    document.getElementById('characterNpcCheck').checked = !!editingCharacter.npc;
+    const npcTeamSelectEl = document.getElementById('characterNpcTeamSelect');
+    npcTeamSelectEl.innerHTML = '<option value="">&mdash; No team selected &mdash;</option>';
+    teams.forEach(team => {
+      const opt = document.createElement('option');
+      opt.value = team.id;
+      opt.textContent = team.name;
+      npcTeamSelectEl.appendChild(opt);
+    });
+    npcTeamSelectEl.value = editingCharacter.npcTeamId != null ? String(editingCharacter.npcTeamId) : '';
+    refreshCharacterAvatarPreview();
+    renderCharacterStatGrid();
+    characterListView.style.display = 'none';
+    characterEditView.style.display = 'block';
   }
 
-  function renderRosterList(){
-    const list = document.getElementById('rosterList');
+  function closeCharacterEditor(){
+    editingCharacter = null;
+    characterEditView.style.display = 'none';
+    characterListView.style.display = 'block';
+  }
+
+  function renderCharacterList(){
+    const list = document.getElementById('characterList');
     list.innerHTML = '';
-    if (rosterTeams.length === 0) { list.appendChild(rosterListEmpty); return; }
-    rosterTeams.forEach(roster => {
+    if (characters.length === 0) { list.appendChild(characterListEmpty); return; }
+    characters.forEach(ch => {
       const card = document.createElement('div');
       card.className = 'roster-card';
 
       const sw = document.createElement('div');
       sw.className = 'roster-card-swatch';
-      sw.style.background = kitBackground(roster.color, roster.color2, roster.style);
+      if (ch.avatar) {
+        const img = document.createElement('img');
+        img.src = ch.avatar;
+        sw.appendChild(img);
+      } else {
+        sw.style.background = 'var(--panel-2)';
+        sw.style.display = 'flex';
+        sw.style.alignItems = 'center';
+        sw.style.justifyContent = 'center';
+        sw.style.fontSize = '11px';
+        sw.style.fontWeight = '800';
+        sw.style.color = 'var(--muted)';
+        sw.textContent = (ch.name || '?').charAt(0).toUpperCase();
+      }
 
       const info = document.createElement('div');
       info.className = 'roster-card-info';
       const name = document.createElement('div');
       name.className = 'roster-card-name';
-      name.textContent = roster.name || 'Unnamed Team';
+      name.textContent = (ch.name || 'Unnamed') + (ch.number ? ' #' + ch.number : '');
       const count = document.createElement('div');
       count.className = 'roster-card-count';
-      count.textContent = roster.players.length + ' player' + (roster.players.length === 1 ? '' : 's');
+      const posLabel = (ch.position || '').slice(0, -1);
+      const talentLabel = [ch.talent, ch.talent2].filter(Boolean).join(' + ');
+      count.textContent = posLabel + (talentLabel ? ' \u2022 ' + talentLabel : '');
       info.appendChild(name);
       info.appendChild(count);
 
       const actions = document.createElement('div');
       actions.className = 'roster-card-actions';
 
-      const loadLeftBtn = document.createElement('button');
-      loadLeftBtn.className = 'btn'; loadLeftBtn.type = 'button'; loadLeftBtn.textContent = 'Load Left';
-      loadLeftBtn.addEventListener('click', () => loadRosterToField(roster, 'left'));
-
-      const loadRightBtn = document.createElement('button');
-      loadRightBtn.className = 'btn'; loadRightBtn.type = 'button'; loadRightBtn.textContent = 'Load Right';
-      loadRightBtn.addEventListener('click', () => loadRosterToField(roster, 'right'));
-
       const editBtn = document.createElement('button');
       editBtn.className = 'btn'; editBtn.type = 'button'; editBtn.textContent = 'Edit';
-      editBtn.addEventListener('click', () => openRosterEditor(roster));
+      editBtn.addEventListener('click', () => openCharacterEditor(ch));
 
       const delBtn = document.createElement('button');
       delBtn.className = 'delete-btn'; delBtn.type = 'button'; delBtn.textContent = 'Delete';
       delBtn.addEventListener('click', () => {
-        rosterTeams = rosterTeams.filter(r => r.id !== roster.id);
+        characters = characters.filter(c => c.id !== ch.id);
         markDirty();
-        renderRosterList();
+        renderCharacterList();
+        refreshLoadCharacterDropdown();
       });
 
-      actions.appendChild(loadLeftBtn);
-      actions.appendChild(loadRightBtn);
       actions.appendChild(editBtn);
       actions.appendChild(delBtn);
       card.appendChild(sw);
@@ -6429,61 +6700,329 @@
     });
   }
 
-  const ROSTER_ROLE_X = { Goalkeepers: 8, Defenders: 22, Midfielders: 33, Attackers: 44 };
-  function loadRosterToField(roster, side){
-    const byRole = {};
-    roster.players.forEach(p => { (byRole[p.position] = byRole[p.position] || []).push(p); });
-    Object.entries(byRole).forEach(([role, list]) => {
-      const baseX = ROSTER_ROLE_X[role] || 33;
-      const x = side === 'right' ? (100 - baseX) : baseX;
-      list.forEach((p, i) => {
-        const n = list.length;
-        const y = n === 1 ? 50 : 12 + (78 * i / (n - 1));
-        pins.push(normalizePin({
-          id: idSeq++,
-          x, y, anchorX: x, anchorY: Math.round(y * 10) / 10,
-          color: roster.color, color2: roster.color2, style: roster.style,
-          number: p.number, name: p.name,
-          npc: !!p.npc, npcPosition: p.position, npcTeamId: null,
-          talent: p.talent || null, speedster: !!p.speedster,
-          stats: { ...p.stats }
-        }));
-      });
+  document.getElementById('characterLibraryBtn').addEventListener('click', () => {
+    renderCharacterList();
+    characterListView.style.display = 'block';
+    characterEditView.style.display = 'none';
+    characterLibraryOverlay.classList.remove('hidden');
+  });
+  document.getElementById('characterLibraryBackBtn').addEventListener('click', () => {
+    characterLibraryOverlay.classList.add('hidden');
+    refreshLoadCharacterDropdown(); // in case something changed while the library was open
+  });
+  document.getElementById('characterNewBtn').addEventListener('click', () => openCharacterEditor(null));
+  document.getElementById('characterCancelBtn').addEventListener('click', closeCharacterEditor);
+  document.getElementById('characterPositionSelect').addEventListener('change', (e) => { if (editingCharacter) editingCharacter.position = e.target.value; });
+  document.getElementById('characterSpeedsterCheck').addEventListener('change', (e) => { if (editingCharacter) editingCharacter.speedster = e.target.checked; });
+  document.getElementById('characterTalentSelect').addEventListener('change', (e) => { if (editingCharacter) editingCharacter.talent = e.target.value || null; });
+  document.getElementById('characterTalentSelect2').addEventListener('change', (e) => { if (editingCharacter) editingCharacter.talent2 = e.target.value || null; });
+
+  document.getElementById('characterNpcCheck').addEventListener('change', (e) => { if (editingCharacter) editingCharacter.npc = e.target.checked; });
+  document.getElementById('characterNpcTeamSelect').addEventListener('change', (e) => { if (editingCharacter) editingCharacter.npcTeamId = e.target.value ? Number(e.target.value) : null; });
+
+  // Avatar upload — resized down to a small square thumbnail and re-compressed
+  // before storing, purely so a reference picture doesn't meaningfully bloat
+  // the synced payload (this data travels to every peer in the room).
+  const AVATAR_SIZE = 96;
+  function processAvatarFile(file){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Could not read that file.'));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('That doesn\u2019t look like a valid image.'));
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = AVATAR_SIZE;
+          canvas.height = AVATAR_SIZE;
+          const ctx = canvas.getContext('2d');
+          // center-crop to a square before scaling down, so the thumbnail isn't stretched
+          const side = Math.min(img.width, img.height);
+          const sx = (img.width - side) / 2;
+          const sy = (img.height - side) / 2;
+          ctx.drawImage(img, sx, sy, side, side, 0, 0, AVATAR_SIZE, AVATAR_SIZE);
+          resolve(canvas.toDataURL('image/jpeg', 0.75));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
     });
-    renderPins();
-    teamEditorOverlay.classList.add('hidden');
-    showToast((roster.name || 'Team') + ' loaded on the ' + side + '.', 'win');
   }
 
-  document.getElementById('teamEditorBtn').addEventListener('click', () => {
-    renderRosterList();
-    rosterListView.style.display = 'block';
-    rosterEditView.style.display = 'none';
-    teamEditorOverlay.classList.remove('hidden');
+  document.getElementById('characterAvatarInput').addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = ''; // allow picking the same file again later
+    if (!file || !editingCharacter) return;
+    try {
+      editingCharacter.avatar = await processAvatarFile(file);
+      refreshCharacterAvatarPreview();
+    } catch (err) {
+      showToast(err.message || 'Couldn\u2019t process that image.', 'error');
+    }
   });
-  document.getElementById('teamEditorBackBtn').addEventListener('click', () => {
-    teamEditorOverlay.classList.add('hidden');
+  document.getElementById('characterAvatarRemoveBtn').addEventListener('click', () => {
+    if (!editingCharacter) return;
+    editingCharacter.avatar = null;
+    refreshCharacterAvatarPreview();
   });
-  document.getElementById('rosterNewBtn').addEventListener('click', () => openRosterEditor(null));
-  document.getElementById('rosterCancelBtn').addEventListener('click', closeRosterEditor);
-  document.getElementById('rosterAddPlayerBtn').addEventListener('click', () => {
-    if (editingRoster.players.length >= 16) { showToast('Max 16 players per roster.', 'error'); return; }
-    editingRoster.players.push(blankRosterPlayer());
-    renderRosterPlayerRows();
-  });
-  document.getElementById('rosterSaveBtn').addEventListener('click', () => {
-    editingRoster.name = document.getElementById('rosterNameInput').value.trim() || 'Unnamed Team';
-    if (editingRosterIsNew) {
-      editingRoster.id = rosterTeamIdSeq++;
-      rosterTeams.push(editingRoster);
+
+
+  document.getElementById('characterSaveBtn').addEventListener('click', () => {
+    editingCharacter.name = document.getElementById('characterNameInput').value.trim() || 'Unnamed';
+    editingCharacter.number = document.getElementById('characterNumberInput').value.replace(/[^0-9]/g, '').slice(0, 2);
+    if (editingCharacterIsNew) {
+      editingCharacter.id = characterIdSeq++;
+      characters.push(editingCharacter);
     } else {
-      const idx = rosterTeams.findIndex(r => r.id === editingRoster.id);
-      if (idx >= 0) rosterTeams[idx] = editingRoster; else rosterTeams.push(editingRoster);
+      const idx = characters.findIndex(c => c.id === editingCharacter.id);
+      if (idx >= 0) characters[idx] = editingCharacter; else characters.push(editingCharacter);
     }
     markDirty();
-    renderRosterList();
-    closeRosterEditor();
-    showToast('Roster saved.', 'win');
+    renderCharacterList();
+    closeCharacterEditor();
+    refreshLoadCharacterDropdown();
+    showToast('Character saved.', 'win');
+  });
+
+  // ---- Load Character onto a pin (from the pin's own Info tab) ----
+  const loadCharacterSelect = document.getElementById('loadCharacterSelect');
+  function refreshLoadCharacterPreview(){
+    const preview = document.getElementById('loadCharacterPreview');
+    const ch = characters.find(c => c.id === Number(loadCharacterSelect.value));
+    if (ch && ch.avatar) {
+      preview.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = ch.avatar;
+      preview.appendChild(img);
+    } else {
+      preview.textContent = '?';
+    }
+  }
+  function refreshLoadCharacterDropdown(){
+    const prevValue = loadCharacterSelect.value;
+    loadCharacterSelect.innerHTML = '<option value="">&mdash; Choose a character &mdash;</option>';
+    characters.forEach(ch => {
+      const opt = document.createElement('option');
+      opt.value = ch.id;
+      opt.textContent = (ch.name || 'Unnamed') + (ch.number ? ' #' + ch.number : '');
+      loadCharacterSelect.appendChild(opt);
+    });
+    if ([...loadCharacterSelect.options].some(o => o.value === prevValue)) loadCharacterSelect.value = prevValue;
+    refreshLoadCharacterPreview();
+  }
+  loadCharacterSelect.addEventListener('change', refreshLoadCharacterPreview);
+  document.getElementById('loadCharacterBtn').addEventListener('click', () => {
+    const pin = pins.find(p => p.id === activePinId);
+    if (!pin) return;
+    const ch = characters.find(c => c.id === Number(loadCharacterSelect.value));
+    if (!ch) { showToast('Pick a character first.', 'error'); return; }
+    pin.name = ch.name;
+    pin.number = ch.number;
+    pin.npcPosition = ch.position;
+    pin.npc = !!ch.npc;
+    pin.npcTeamId = ch.npcTeamId;
+    pin.stats = { ...ch.stats };
+    pin.speedster = ch.speedster;
+    pin.talent = ch.talent;
+    pin.talent2 = ch.talent2;
+    pin.talentActive = false; pin.talentUsesLeft = 10;
+    pin.talent2Active = false; pin.talent2UsesLeft = 10;
+    pin.predatorActive = false; pin.predatorCharges = 4; pin.predatorLocked = false;
+    pin.assassinClearUsed = false;
+    pin.destroyerActive = false; pin.destroyerUsed = false; pin.destroyerTurnsLeft = 0;
+    pin.metaDashCharges = 2; pin.metaDashCooldownChunks = 0;
+    editName.value = pin.name;
+    editNumber.value = pin.number;
+    refreshCharacterTab(pin);
+    refreshNpcTab(pin);
+    STAT_KEYS.forEach(key => { statInputs[key].value = pin.stats[key] || 0; });
+    renderPins();
+    markDirty();
+    showToast(pinLabel(pin) + ' loaded from ' + (ch.name || 'character') + '.', 'win');
+  });
+
+  // ============================================================
+  // How to Play — a reference guide covering everything the app
+  // actually does mechanically. Sidebar-navigated so it works both
+  // as a first read-through and as a "wait, how does X work again"
+  // lookup later. Every number below is pulled directly from the
+  // game logic, not approximated.
+  // ============================================================
+  const TUTORIAL_TOPICS = [
+    { id: 'basics', title: 'Getting Started', html: `
+      <h3>Getting Started</h3>
+      <p><strong>Edit mode</strong> is for setup — placing pins, changing kits, editing stats, building characters. Nothing here costs an action or is bound by turn order.</p>
+      <p><strong>Play mode</strong> is where the actual match happens — moving pins, rolling, challenges, all of it. Switching modes is personal to your own screen; it doesn't change what anyone else sees.</p>
+      <p>The match is organized into <strong>chunks</strong> (the counter at the top). Each pin gets <span class="tutorial-number">3 actions</span> per chunk. Moving a pin, rolling most dice, and initiating a challenge each cost 1 action.</p>
+      <p>Pressing <strong>+</strong> on the chunk counter to a genuinely new, never-before-reached chunk refills everyone's actions back to 3. Stepping back to a chunk you've already been on does <em>not</em> refill anything — it restores exactly how the board looked when you left that chunk (see "Chunks & Going Back").</p>
+    `},
+    { id: 'moving', title: 'Moving Pins', html: `
+      <h3>Moving Pins</h3>
+      <p>Drag a pin in Play mode and a radius ring shows how far it can go this action. Release, and the move sits as <strong>pending</strong> — you'll see Confirm/Cancel buttons above the pin until you commit it.</p>
+      <p>A normal move costs 1 action and uses your base radius. Certain rolls and abilities temporarily increase that radius:</p>
+      <ul>
+        <li><strong>SPD (Acceleration) roll, 11+</strong>: doubles your radius until you actually move.</li>
+        <li><strong>Dribble Past win</strong>: same doubled-radius boost.</li>
+        <li><strong>Dash</strong>: 2.5x radius (2x on solid ground, see the Dash section).</li>
+      </ul>
+      <p>If you're currently connected to a Conference room, other people can actually see your pin gliding across the field in real time while you drag it — not just once you confirm.</p>
+    `},
+    { id: 'rolling', title: 'Rolling Stats (Spin)', html: `
+      <h3>Rolling Stats (Spin)</h3>
+      <p>Every roll in this app is a <strong>D20 + the relevant stat</strong>. The 5 stats are ACC, AGL, STR, SPD, MTL.</p>
+      <p>The quickest way to roll any pin's stat directly is the <strong>Spin</strong> tab in that pin's Play menu — five buttons, one per stat. No challenge, no effects, just the number, shown as a badge above the pin so everyone in the room can see it.</p>
+      <p>The full <strong>Dice</strong> list (in the Actions tab) covers the same 5 stats plus three special cases:</p>
+      <ul>
+        <li><strong>MTL (Shots)</strong> — raw roll only, no buffs, checked against the zone requirement before you're even allowed to shoot.</li>
+        <li><strong>ACC (Shot)</strong> — the actual shot roll, only available after passing MTL (Shots) in Zone 2/3, or anywhere in the box.</li>
+        <li><strong>MTL (Attack)</strong> — 19+ unlocks a free move anywhere in your own half.</li>
+      </ul>
+      <p>SPD (Acceleration) rolling 11+ doubles your move radius and locks — you can't re-roll Acceleration again until that pin actually moves.</p>
+    `},
+    { id: 'challenges', title: 'Challenges', html: `
+      <h3>Challenges (Tackle / Block / Slide / Interception)</h3>
+      <p>Initiating a challenge costs 1 action. Both sides roll: you (the challenger) roll <strong>STR</strong> for Tackle/Block/Slide, or <strong>AGL</strong> for Interception. The target picks their own stat to defend with, then both roll D20 + that stat.</p>
+      <p>Higher total wins. There's no tie-breaker rule beyond re-rolling if you want one — the roll is the roll.</p>
+      <p><strong>Dribble Past</strong> works the other way — the ball carrier rolls AGL against an adjacent defender's chosen stat. Win, and your next move gets the doubled-radius boost. Lose, and the defender gets a Steal / Loose Ball choice.</p>
+      <p><strong>Natural 1s matter.</strong> If your own roll on Tackle, Block, or Slide comes up a natural 1, it overrides the whole contest — it's an automatic foul (see "Fouls, Cards & Penalties"), regardless of what the target rolled.</p>
+    `},
+    { id: 'ball', title: 'Ball & Shooting', html: `
+      <h3>Ball & Shooting</h3>
+      <p>The ball follows whoever's marked as carrying it. Toggling "Carrying the Ball" in the Ball tab is free and doesn't cost an action.</p>
+      <p><strong>Shooting is zone-gated.</strong> The pitch has three zones:</p>
+      <ul>
+        <li><strong>The box</strong> — no roll needed, straight to ACC (Shot).</li>
+        <li><strong>Zone 2</strong> — needs <span class="tutorial-number">MTL 10+</span> on the MTL (Shots) roll before you're allowed to shoot at all.</li>
+        <li><strong>Zone 3</strong> — needs <span class="tutorial-number">MTL 15+</span>, same idea, just further out.</li>
+      </ul>
+      <p>Pass the MTL check (or you're in the box), then ACC (Shot) determines whether it actually goes in — that part's judged narratively by whoever's GMing, same as any other roll.</p>
+    `},
+    { id: 'talents', title: 'Talents', html: `
+      <h3>Talents</h3>
+      <p>Every character can have <strong>up to 2 talents</strong>, set in the Character tab. Each slot activates and drains charges completely independently — having two doesn't mean sharing one pool.</p>
+      <ul>
+        <li><strong>Sniper Eyes</strong> — +10 ACC and +10 MTL while active. 10 uses.</li>
+        <li><strong>Assassin Eyes</strong> — +10 STR while active, plus a one-time "Clear the Ball" that instantly makes the ball loose. 10 uses.</li>
+        <li><strong>Meta-Vision</strong> — +10 AGL/MTL/STR while active. Opponents take -5 STR/AGL against you in a challenge unless they also have Meta-Vision active. Activating also unlocks Meta Dash. 10 uses.</li>
+        <li><strong>Predator Eyes</strong> — +15 ACC while active. Only 4 activations per match, and it <strong>locks forever</strong> the moment you confirm a goal scored with it active.</li>
+        <li><strong>Destroyer Eyes</strong> — +20 ACC/STR/AGL. Doesn't activate on its own — it only turns on through Flow (see next section). Once per match, 6 turns.</li>
+      </ul>
+      <p><strong>If both talent slots buff the same stat, the bonuses stack</strong> — dual-talent characters genuinely hit harder, not just more often.</p>
+    `},
+    { id: 'flow', title: 'Flow & Destroyer Eyes', html: `
+      <h3>Flow & Destroyer Eyes</h3>
+      <p>Flow runs in two phases per match:</p>
+      <ul>
+        <li><strong>Phase 1</strong> — <span class="tutorial-number">6 turns</span> the first time you activate it.</li>
+        <li>Then a <span class="tutorial-number">5-chunk cooldown</span>.</li>
+        <li><strong>Phase 2</strong> — <span class="tutorial-number">3 more turns</span>, and after that Flow is locked for the rest of the match.</li>
+      </ul>
+      <p>While active, Flow wraps the pin in a colored aura (pick the color in the Talent tab) that's visible to everyone.</p>
+      <p><strong>Destroyer Eyes only activates from inside Flow</strong> — it won't turn on from its own talent controls at all. Once Flow is active, a Destroyer Eyes character gets the option to enter Destroyer for <span class="tutorial-number">6 turns</span>, once per match, for +20 ACC/STR/AGL.</p>
+    `},
+    { id: 'dash', title: 'Dash, Super Sprint & Meta Dash', html: `
+      <h3>Dash, Super Sprint & Meta Dash</h3>
+      <p>All three are <strong>free</strong> — they don't cost an action.</p>
+      <ul>
+        <li><strong>Dash</strong> — 2 charges, 2.5x radius. Once both are spent, a 5-chunk cooldown before they refill.</li>
+        <li><strong>Super Sprint</strong> (Speedster only) — 1 charge, but also costs a Dash charge alongside it. 3x radius, straight-line only (no diagonal), and a slightly longer cooldown than a normal Dash.</li>
+        <li><strong>Meta Dash</strong> (Meta-Vision only, while active) — 2 charges per match, no cooldown at all — once they're gone, they're gone until End Match. 1.5x radius, weaker than Dash but doesn't touch your normal Dash charges.</li>
+      </ul>
+    `},
+    { id: 'fouls', title: 'Fouls, Cards & Penalties', html: `
+      <h3>Fouls, Cards & Penalties</h3>
+      <p>Rolling a <strong>natural 1</strong> on your own Tackle, Block, or Slide roll is an automatic foul — it overrides the contest entirely, regardless of the target's roll.</p>
+      <p>The ball snaps to the exact spot of the foul. What happens next depends on how close to goal it was:</p>
+      <ul>
+        <li><strong>Inside the box</strong> — flagged as a penalty, no wall.</li>
+        <li><strong>Very close (up to ~Zone 2)</strong> — a wall of 4 defenders forms.</li>
+        <li><strong>Zone 3 range</strong> — a wall of 3.</li>
+        <li><strong>Further out but still meaningful</strong> — a wall of 2.</li>
+        <li><strong>Deep in midfield</strong> — no wall at all.</li>
+      </ul>
+      <p>The wall is built from the fouling player's own teammates, identified by matching kit color, positioned between the ball and their own goal.</p>
+      <p><strong>Cards</strong> can be given to any pin, anytime, from that pin's Ball tab — Warning, Yellow, or Red. A <strong>second yellow automatically becomes a red</strong>. A red card sends the pin to the <strong>Banned</strong> area below the bench — no substitution allowed for a sent-off player, same as real football. Click a banned pin to restore it if it was a mistake.</p>
+    `},
+    { id: 'subs', title: 'Substitutions', html: `
+      <h3>Substitutions</h3>
+      <p>16 bench seats total — 8 per side, below the main palette. Click an empty seat to create a new benched pin.</p>
+      <p>To sub someone in during Play mode: right-click a bench pin, choose Sub, then click the field pin you're swapping them for. Benched pins don't count toward on-field actions or chunk resets while they're sitting out.</p>
+    `},
+    { id: 'npcs', title: 'NPCs & Team Stats', html: `
+      <h3>NPCs & Team Stats</h3>
+      <p><strong>Team Stats</strong> are position-level averages (Attackers/Midfielders/Defenders/Goalkeepers), each stat pool split across a fixed <span class="tutorial-number">20 points</span> per position. These are built and saved from the "Team Stats" button.</p>
+      <p>A pin can be flagged <strong>NPC</strong> (in its own NPC tab) and linked to a Team Sheet plus a position. When that's on, all of that pin's rolls use the linked sheet's numbers for that position instead of its own individual Stats tab.</p>
+      <p>This is different from the Character Library's own NPC option — a saved character can also carry an NPC/Team Sheet link, which gets copied onto whatever pin it's loaded onto.</p>
+    `},
+    { id: 'characters', title: 'Character Library', html: `
+      <h3>Character Library</h3>
+      <p>A personal library of individual characters — name, number, position, all 5 stats, up to 2 talents, Speedster, NPC/Team Sheet link, and an optional small picture just for telling characters apart at a glance.</p>
+      <p>Build one from the "Characters" button. It's saved permanently — it survives reloads and code updates, and if you're in a Conference room, everyone else who's connected gets their own lasting copy too, not just a temporary session view.</p>
+      <p><strong>Loading a character onto a pin</strong> (from that pin's Info tab) copies name, number, position, stats, talents, Speedster, and NPC settings onto it. It deliberately <strong>does not</strong> touch the pin's kit color or style — that stays whatever the pin already had, since a character might play on different sides across different sessions.</p>
+    `},
+    { id: 'chunks', title: 'Chunks & Going Back', html: `
+      <h3>Chunks & Going Back</h3>
+      <p>Every chunk remembers exactly how the board looked the moment you left it — pin positions, actions remaining, ball position, shots, the score, all of it.</p>
+      <p>Step back a chunk (either direction), and it restores that chunk's own snapshot instead of just leaving things where they currently sit. Step forward again, and that later chunk restores <em>its own</em> snapshot too — completely untouched by whatever you changed while you were back visiting an earlier one.</p>
+      <p>This is meant for exactly the "wait, that pin never actually took their turn" situation — step back, let them act, step forward, and everything else picks up exactly where it was. <strong>End Match</strong> (and Clear Field) wipe this history entirely.</p>
+    `},
+    { id: 'matchsim', title: 'Match Simulation', html: `
+      <h3>Match Simulation</h3>
+      <p>For matches your group doesn't want to fully play out live. Groups whoever's currently on the field by kit color into two sides, same trick the foul/wall system uses.</p>
+      <p>Two modes, chosen when you start one:</p>
+      <ul>
+        <li><strong>Regular</strong> — 90 simulated minutes, extra time to 120 if it's tied, then a real penalty shootout (best-of-5, sudden death if still level) if it's still not decided.</li>
+        <li><strong>Target</strong> — set a goal count beforehand; the match ends the instant either side reaches it.</li>
+      </ul>
+      <p>It advances one moment at a time — anyone can hit "Continue." Most possessions resolve automatically, but a genuine big chance pauses and offers <strong>Shoot / Pass / Dribble</strong> as an actual choice before rolling the outcome, tied to a real named pin on the field.</p>
+    `},
+    { id: 'conference', title: 'Conference (Multiplayer)', html: `
+      <h3>Conference (Multiplayer)</h3>
+      <p><strong>Host Room</strong> generates a short room code and starts listening for connections. <strong>Join Room</strong> connects directly to whoever's hosting that code.</p>
+      <p>Whoever hosts is the hub everyone else connects through — if the host closes their tab, that session's live state goes with them, since there's no separate server holding it. For a session where the host stays present throughout, this is a non-issue.</p>
+      <p>Pin dragging is genuinely live — you can watch someone else's pin actually move in real time as they drag it, not just catch up once they release it. Presence (who's currently connected) shows as small colored circles near the mode toggle.</p>
+    `},
+    { id: 'saves', title: 'Saves', html: `
+      <h3>Saves</h3>
+      <p>A full snapshot of the current board — every pin, the ball, the score, all of it — saved under a name you choose. Different from the Character Library and Team Stats, which are personal and persistent; a Save is a whole-board moment, meant for setups you'll want to reload later, like a specific formation or a mid-match state.</p>
+      <p>"+ Save Current Board" captures right now. Load any save to replace the current board with that exact snapshot.</p>
+    `},
+    { id: 'notepad', title: 'Notepad & Dice Log', html: `
+      <h3>Notepad & Dice Log</h3>
+      <p>The Notepad has two tabs. <strong>Activity</strong> is the narrative log — goals, fouls, cards, subs, anything the app logs in plain language.</p>
+      <p><strong>Dice Rolls</strong> is a focused, structured log of just the numbers — formatted like <span class="tutorial-number">#2B = 10+5=15</span> (pin number, team letter, roll, bonus, total). The team letter uses whatever you've set on that pin's Team A/B radio buttons in its Info tab; if you haven't set one, it falls back to guessing by which half of the field the pin's currently on.</p>
+      <p>Clear only clears whichever tab you're currently looking at, not both at once.</p>
+    `}
+  ];
+
+  let activeTutorialTopic = TUTORIAL_TOPICS[0].id;
+
+  function renderTutorial(){
+    const sidebar = document.getElementById('tutorialSidebar');
+    const content = document.getElementById('tutorialContent');
+    sidebar.innerHTML = '';
+    TUTORIAL_TOPICS.forEach(topic => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'tutorial-sidebar-btn' + (topic.id === activeTutorialTopic ? ' active' : '');
+      btn.textContent = topic.title;
+      btn.addEventListener('click', () => {
+        activeTutorialTopic = topic.id;
+        renderTutorial();
+        content.scrollTop = 0;
+      });
+      sidebar.appendChild(btn);
+    });
+    const active = TUTORIAL_TOPICS.find(t => t.id === activeTutorialTopic) || TUTORIAL_TOPICS[0];
+    content.innerHTML = active.html;
+  }
+
+  document.getElementById('tutorialBtn').addEventListener('click', () => {
+    renderTutorial();
+    document.getElementById('tutorialOverlay').classList.remove('hidden');
+  });
+  document.getElementById('tutorialBackBtn').addEventListener('click', () => {
+    document.getElementById('tutorialOverlay').classList.add('hidden');
   });
 
   // ---- grey zone color ----
@@ -6582,12 +7121,37 @@
     });
   }
 
+  let lastKnownChunkValue = Number(chunkValue.value) || 1; // tracks whichever chunk we were just on, so we always know what to snapshot when leaving it
+
+  function handleChunkChange(newValue){
+    const oldValue = lastKnownChunkValue;
+    if (newValue === oldValue) return;
+    if (hasStartedPlay) snapshotCurrentChunk(oldValue); // preserve exactly how we're leaving this chunk
+
+    chunkValue.value = newValue;
+    syncMiniHud();
+
+    // only a genuinely new high-water-mark chunk grants fresh moves;
+    // returning to an already-played chunk restores its own snapshot instead.
+    // Uses hasStartedPlay (shared/synced) rather than mode (personal/local) so
+    // this behaves consistently for everyone in a Conference, regardless of
+    // which view any individual person's own browser happens to be showing.
+    if (hasStartedPlay && newValue > maxChunkReached) {
+      maxChunkReached = newValue;
+      resetRound();
+      snapshotCurrentChunk(newValue); // this chunk's baseline, right after the fresh refill
+    } else if (hasStartedPlay) {
+      restoreChunkSnapshot(newValue);
+    }
+    lastKnownChunkValue = newValue;
+    renderPins();
+    markDirty();
+  }
+
   document.querySelectorAll('.chunk-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const delta = Number(btn.dataset.delta);
       const newValue = clampInt(Number(chunkValue.value) + delta, 0, 999);
-      chunkValue.value = newValue;
-      syncMiniHud();
       if (delta > 0) {
         tickDashCooldowns();
         const activePin = pins.find(p => p.id === activePinId);
@@ -6596,28 +7160,12 @@
           refreshFlowTab(activePin);
         }
       }
-      // only a genuinely new high-water-mark chunk grants fresh moves;
-      // stepping back down and returning to an already-played chunk does not.
-      // Uses hasStartedPlay (shared/synced) rather than mode (personal/local) so
-      // this behaves consistently for everyone in a Conference, regardless of
-      // which view any individual person's own browser happens to be showing.
-      if (hasStartedPlay && newValue > maxChunkReached) {
-        maxChunkReached = newValue;
-        resetRound();
-      }
-      renderPins();
+      handleChunkChange(newValue);
     });
   });
   chunkValue.addEventListener('change', () => {
     const newValue = clampInt(chunkValue.value, 0, 999);
-    chunkValue.value = newValue;
-    syncMiniHud();
-    markDirty();
-    if (hasStartedPlay && newValue > maxChunkReached) {
-      maxChunkReached = newValue;
-      resetRound();
-      renderPins();
-    }
+    handleChunkChange(newValue);
   });
 
   syncMiniHud();
@@ -7109,7 +7657,7 @@
       }
 
       const version = nextTimestamp(); // also logical-clock-based, so "is there a newer save" comparisons aren't thrown off by clock drift either
-      // LIVE gameplay data only — teams/saves/rosterTeams live in their own
+      // LIVE gameplay data only — teams/saves/characters live in their own
       // separate key now (see saveSetupStateIfChanged) so that this save,
       // which fires on nearly every pin move, stays small and fast instead
       // of re-uploading every saved roster/board-save on every single move.
@@ -7118,6 +7666,7 @@
         pins, idSeq, spawnIndex, deletedPinIds,
         ball, shots, shotIdSeq,
         hasStartedPlay, maxChunkReached, maxChunkResetAt, stadiumLook,
+        chunkSnapshots,
         chunkValue: chunkValue.value,
         scoreA: scoreA.value, scoreB: scoreB.value,
         teamAName: teamAName.value, teamBName: teamBName.value,
@@ -7166,7 +7715,7 @@
     }
   }
 
-  // ---- Setup data (Team Stat Sheets, board Saves, Team Editor rosters) ----
+  // ---- Setup data (Team Stat Sheets, board Saves, Character Library) ----
   // This is the stuff that can genuinely grow large over a session — every saved
   // roster, every board Save, full pin snapshots and all. It changes rarely
   // compared to pin positions, so it gets its own key, synced independently,
@@ -7176,15 +7725,15 @@
 
   async function saveSetupStateIfChanged(){
     if (!window.storage) return;
-    let payload = JSON.stringify({ teams, teamIdSeq, saves, saveIdSeq, rosterTeams, rosterTeamIdSeq });
+    let payload = JSON.stringify({ teams, teamIdSeq, saves, saveIdSeq, characters, characterIdSeq });
     if (payload === lastSavedSetupPayload) return; // nothing setup-related changed — this is the whole point of splitting it out
     if (payload.length > 4_800_000) {
       // too close to the 5MB per-key limit — trim the oldest saved sheets rather than fail outright
-      while (saves.length > 1 && JSON.stringify({ teams, teamIdSeq, saves, saveIdSeq, rosterTeams, rosterTeamIdSeq }).length > 4_800_000) {
+      while (saves.length > 1 && JSON.stringify({ teams, teamIdSeq, saves, saveIdSeq, characters, characterIdSeq }).length > 4_800_000) {
         saves.shift();
       }
       renderSaves();
-      payload = JSON.stringify({ teams, teamIdSeq, saves, saveIdSeq, rosterTeams, rosterTeamIdSeq });
+      payload = JSON.stringify({ teams, teamIdSeq, saves, saveIdSeq, characters, characterIdSeq });
     }
     try {
       let lastErr = null;
@@ -7200,6 +7749,7 @@
       }
       if (lastErr) throw lastErr;
       lastSavedSetupPayload = payload;
+      persistTeamsAndRostersLocally();
     } catch (err) {
       console.error('Setup data save failed:', err);
     }
@@ -7235,6 +7785,7 @@
       refreshStadiumLookBtns();
     }
     mergeMaxChunk(state.maxChunkReached, state.maxChunkResetAt);
+    if (state.chunkSnapshots) chunkSnapshots = state.chunkSnapshots;
     if (state.chunkValue !== undefined) chunkValue.value = state.chunkValue;
     if (state.scoreA !== undefined) scoreA.value = state.scoreA;
     if (state.scoreB !== undefined) scoreB.value = state.scoreB;
@@ -7248,8 +7799,9 @@
     if (typeof state.teamIdSeq === 'number') teamIdSeq = state.teamIdSeq;
     if (Array.isArray(state.saves)) saves = state.saves;
     if (typeof state.saveIdSeq === 'number') saveIdSeq = state.saveIdSeq;
-    if (Array.isArray(state.rosterTeams)) rosterTeams = state.rosterTeams;
-    if (typeof state.rosterTeamIdSeq === 'number') rosterTeamIdSeq = state.rosterTeamIdSeq;
+    if (Array.isArray(state.characters)) characters = state.characters;
+    if (typeof state.characterIdSeq === 'number') characterIdSeq = state.characterIdSeq;
+    if (Array.isArray(state.teams) || Array.isArray(state.characters)) persistTeamsAndRostersLocally();
     if ('matchSim' in state) { matchSim = state.matchSim; renderMatchSim(); }
     if (Array.isArray(state.activityLog)) activityLog = state.activityLog;
     if (Array.isArray(state.diceRollLog)) { diceRollLog = state.diceRollLog; renderDiceRollLog(); }
@@ -7362,6 +7914,7 @@
   }
 
   (async function initBoard(){
+    loadTeamsAndRostersFromLocal(); // Team Stats / Character Library — survives reloads and updates, regardless of room state
     await loadMyIdentity(); // may reconnect us to a room from a previous session
     const restored = await loadState();
     if (!restored) {
@@ -7372,6 +7925,9 @@
       await writePresenceHeartbeat();
       renderPresenceBalls();
     }
+    renderTeams();
+    renderCharacterList();
+    refreshLoadCharacterDropdown();
     setInterval(syncTick, 250); // safe to run this tight — window.storage is now purely local memory under the PeerJS shim, the real network transfer already happened via push, not here
   })();
 })();
