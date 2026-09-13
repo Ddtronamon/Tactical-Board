@@ -1192,6 +1192,25 @@
   }
   .notepad-header.dragging{ cursor:grabbing; }
   .notepad-header-actions{ display:flex; align-items:center; gap:8px; }
+  .notepad-subtabs{
+    display:flex;
+    border-bottom:1px solid var(--line);
+    background:var(--panel-2);
+  }
+  .notepad-subtab-btn{
+    flex:1;
+    background:none;
+    border:none;
+    color:var(--muted);
+    font-size:10.5px;
+    font-weight:800;
+    letter-spacing:.4px;
+    text-transform:uppercase;
+    padding:8px 4px;
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+  }
+  .notepad-subtab-btn.active{ color:var(--text); border-bottom-color:var(--blue); }
   .notepad-clear-btn{
     background:none;
     border:1px solid var(--line);
@@ -1268,6 +1287,14 @@
     font-size:13px;
   }
   .num-row{ display:flex; gap:6px; }
+  .pin-team-radios{ display:flex; align-items:center; gap:18px; }
+  .pin-team-radio-label{
+    display:flex; align-items:center; gap:6px;
+    font-size:12.5px; font-weight:700; color:var(--text);
+    line-height:1;
+    cursor:pointer;
+  }
+  .pin-team-radio-label input[type="radio"]{ width:15px; height:15px; margin:0; accent-color:var(--blue); cursor:pointer; }
   .num-row input{ flex:1; }
   .num-row button{
     background:var(--panel-2);
@@ -2113,8 +2140,15 @@
       <button class="panel-x" id="closeNotepadBtn" type="button">&times;</button>
     </div>
   </div>
+  <div class="notepad-subtabs">
+    <button class="notepad-subtab-btn active" id="notepadTabActivity" type="button">Activity</button>
+    <button class="notepad-subtab-btn" id="notepadTabDice" type="button">Dice Rolls</button>
+  </div>
   <div class="notepad-body" id="notepadBody">
     <p class="presence-empty">Nothing logged yet.</p>
+  </div>
+  <div class="notepad-body" id="diceRollBody" style="display:none;">
+    <p class="presence-empty">No rolls yet.</p>
   </div>
 </div>
 
@@ -2209,6 +2243,17 @@
     <div class="num-row">
       <input type="text" id="editNumber" maxlength="2" inputmode="numeric">
       <button id="clearNumber">Clear</button>
+    </div>
+
+    <div class="pane-divider"></div>
+    <label>Team (for the Dice Roll log)</label>
+    <div class="pin-team-radios">
+      <label class="pin-team-radio-label">
+        <input type="radio" name="pinTeam" id="pinTeamA" value="A"> Team A
+      </label>
+      <label class="pin-team-radio-label">
+        <input type="radio" name="pinTeam" id="pinTeamB" value="B"> Team B
+      </label>
     </div>
   </div>
 
@@ -2475,10 +2520,32 @@
 
   function wireConnection(conn, isFromGuest){
     conn.on('data', (msg) => {
-      if (!msg || msg.type !== 'kv') return;
-      handleIncomingKV(msg.key, msg.value, isFromGuest ? conn.peer : null);
+      if (!msg) return;
+      if (msg.type === 'kv') {
+        handleIncomingKV(msg.key, msg.value, isFromGuest ? conn.peer : null);
+      } else if (msg.type === 'live-move') {
+        // ephemeral — never touches localStore, just applied directly for
+        // visual smoothness, and relayed onward if we're the host's hub
+        window.__onLivePinMove && window.__onLivePinMove(msg.payload);
+        if (isHost && isFromGuest) {
+          Object.keys(guestConns).forEach(id => {
+            if (id === conn.peer) return;
+            const c = guestConns[id];
+            if (c && c.open) c.send(msg);
+          });
+        }
+      }
     });
   }
+
+  window.__broadcastLivePinMove = function(pinId, x, y){
+    const msg = { type: 'live-move', payload: { pinId, x, y } };
+    if (isHost) {
+      Object.values(guestConns).forEach(conn => { if (conn.open) conn.send(msg); });
+    } else if (hostConn && hostConn.open) {
+      hostConn.send(msg);
+    }
+  };
 
   window.storage = {
     async get(key, shared){
@@ -2500,12 +2567,23 @@
       return { key, deleted: true, shared: !!shared };
     },
     async list(prefix, shared){
-      return null; // not used anywhere in this app
+      const store = shared ? localStore : personalStore;
+      const keys = Object.keys(store).filter(k => !prefix || k.startsWith(prefix));
+      return { keys, prefix, shared: !!shared };
     }
   };
 
   // ---- Host / Join lifecycle, called by the existing Conference UI ----
+  function teardownPeerConnection(){
+    if (peer) { try { peer.destroy(); } catch (e) {} peer = null; }
+    isHost = false;
+    hostConn = null;
+    guestConns = {};
+    localStore = {};
+  }
+
   window.__peerHostRoom = function(roomCode){
+    teardownPeerConnection(); // in case we were already hosting or joined to something else
     return new Promise((resolve, reject) => {
       isHost = true;
       peer = new Peer(PEER_PREFIX + roomCode);
@@ -2528,6 +2606,7 @@
   };
 
   window.__peerJoinRoom = function(roomCode){
+    teardownPeerConnection(); // in case we were already hosting or joined to something else
     return new Promise((resolve, reject) => {
       let settled = false;
       isHost = false;
@@ -2568,11 +2647,7 @@
   };
 
   window.__peerLeaveRoom = function(){
-    if (peer) { try { peer.destroy(); } catch (e) {} peer = null; }
-    isHost = false;
-    hostConn = null;
-    guestConns = {};
-    localStore = {};
+    teardownPeerConnection();
   };
 })();
 </script>
@@ -2656,6 +2731,28 @@
     activityLog.push({ time, text });
     if (activityLog.length > 300) activityLog.shift();
     renderActivityLog();
+    markDirty();
+  }
+
+  // ---- Dice Rolls sub-log: a focused, structured view of just the rolls ----
+  let diceRollLog = []; // { time, label, roll, buff, total } — synced across the room, same as activityLog
+
+  function pinRollLabel(pin){
+    // e.g. "#2B" — pin's number, plus A/B for its team. Uses the explicit
+    // Team A/B choice from the Info tab if set; falls back to which half of
+    // the field the pin's currently on for any pin that hasn't been assigned.
+    const num = pin.number || '?';
+    const side = pin.team === 'A' ? 'A' : pin.team === 'B' ? 'B' : (pin.x < 50 ? 'A' : 'B');
+    return '#' + num + side;
+  }
+
+  function logDiceRoll(pin, roll, buff){
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const label = pinRollLabel(pin);
+    const total = roll + buff;
+    diceRollLog.push({ time, label, roll, buff, total });
+    if (diceRollLog.length > 300) diceRollLog.shift();
+    renderDiceRollLog();
     markDirty();
   }
 
@@ -3149,6 +3246,7 @@
     onBench: false, benchSlot: null,
     yellowCards: 0, redCarded: false, banned: false,
     updatedAt: 0, // per-pin merge timestamp — lets two people move different pins without one overwriting the other
+    team: null, // 'A' | 'B' | null — set manually in the Info tab, used for the Dice Roll log label
     diceResult: null
   };
 
@@ -3992,7 +4090,7 @@
     el.addEventListener('pointercancel', onPinPointerUp);
   }
 
-  function onPinPointerMove(e){
+  function onPinPointerMoveCore(e){
     if (!dragState || e.pointerId !== dragState.pointerId) return;
     const rect = field.getBoundingClientRect();
 
@@ -4062,6 +4160,31 @@
       }
     }
   }
+
+  let lastPinBroadcastAt = 0;
+  function onPinPointerMove(e){
+    onPinPointerMoveCore(e);
+    if (!dragState) return;
+    // Live-broadcast this pin's position so everyone else's screen shows it
+    // actually moving in real time, not just once it's confirmed. This goes
+    // straight over the peer connection, separate from the normal state-sync
+    // path, specifically so it's as fast and lightweight as possible.
+    // Throttled to ~15/sec — smooth enough to watch, without flooding the channel.
+    const now = Date.now();
+    if (now - lastPinBroadcastAt < 65) return;
+    lastPinBroadcastAt = now;
+    if (window.__broadcastLivePinMove) window.__broadcastLivePinMove(dragState.id, dragState.lastX, dragState.lastY);
+  }
+
+  window.__onLivePinMove = function(payload){
+    if (!payload || typeof payload.pinId !== 'number') return;
+    // don't fight with a pin we're currently dragging ourselves
+    if (dragState && dragState.id === payload.pinId) return;
+    const el = pinLayer.querySelector('[data-id="' + payload.pinId + '"]');
+    if (!el) return; // not currently on the field (e.g. benched) — ignore
+    el.style.left = payload.x + '%';
+    el.style.top = payload.y + '%';
+  };
 
   function onPinPointerUp(e){
     if (!dragState || e.pointerId !== dragState.pointerId) return;
@@ -4216,6 +4339,8 @@
 
     editName.value = pin.name || '';
     editNumber.value = pin.number || '';
+    document.getElementById('pinTeamA').checked = pin.team === 'A';
+    document.getElementById('pinTeamB').checked = pin.team === 'B';
     highlightSwatch(editSwatches, pin.color);
     highlightSwatch(editSwatches2, pin.color2 || '#FFFFFF');
     refreshStylePreviews(pin);
@@ -4238,6 +4363,19 @@
     if (!pin) return;
     pin.name = editName.value;
     renderPins();
+  });
+
+  document.getElementById('pinTeamA').addEventListener('change', () => {
+    const pin = pins.find(p => p.id === activePinId);
+    if (!pin) return;
+    pin.team = 'A';
+    markDirty();
+  });
+  document.getElementById('pinTeamB').addEventListener('change', () => {
+    const pin = pins.find(p => p.id === activePinId);
+    if (!pin) return;
+    pin.team = 'B';
+    markDirty();
   });
 
   editNumber.addEventListener('input', () => {
@@ -4779,6 +4917,7 @@
       const stat = getPinStat(pin, key);
       const total = roll + stat;
       pin.diceResult = { label: key, roll, buff: stat, total, boosted: false };
+      logDiceRoll(pin, roll, stat);
       renderPins();
     });
     playStatsRollButtons.appendChild(btn);
@@ -4922,6 +5061,7 @@
       pin.mtlShotsResult = { roll, required: zone.required, zone: zone.zone, passed };
       pin.diceResult = { label: 'MTL (Shots)', roll, buff: 0, total: roll, boosted: passed };
       logEvent(pinLabel(pin) + ' rolled MTL (Shots): ' + roll + (passed ? ' \u2014 passed' : ' \u2014 failed'));
+      logDiceRoll(pin, roll, 0);
       renderPins();
       return;
     }
@@ -4934,6 +5074,7 @@
       pin.diceResult = { label: 'ACC (Shot)', roll, buff: buff + access.debuff, total, boosted: access.debuff === 0 };
       pin.mtlShotsResult = null; // consumed — next shot attempt needs a fresh MTL(Shots) roll if still in Zone 2/3
       logEvent(pinLabel(pin) + ' shot on goal: ' + total + ' (roll ' + roll + ')');
+      logDiceRoll(pin, roll, buff + access.debuff);
       renderPins();
       return;
     }
@@ -4945,6 +5086,7 @@
       if (success) pin.freeMoveUnlocked = true;
       pin.diceResult = { label: 'MTL (Attack)', roll, buff, total, boosted: success };
       logEvent(pinLabel(pin) + ' rolled MTL (Attack): ' + total + (success ? ' \u2014 free move unlocked!' : ''));
+      logDiceRoll(pin, roll, buff);
       renderPins();
       return;
     }
@@ -4964,6 +5106,7 @@
 
     pin.diceResult = { label: LABELS[rollId], roll, buff, total, boosted };
     logEvent(pinLabel(pin) + ' rolled ' + LABELS[rollId] + ': ' + total + ' (roll ' + roll + ')');
+    logDiceRoll(pin, roll, buff);
     renderPins();
   }
 
@@ -5640,6 +5783,8 @@
     const label = CHALLENGE_LABELS[defenseType];
     challenger.diceResult = { label: label + ' (You) ' + challengerStatKey, roll: cRoll, buff: cBuff, total: cTotal, boosted: challengerWins };
     target.diceResult = { label: label + ' (Resp) ' + targetStatKey, roll: tRoll, buff: tBuff, total: tTotal, boosted: !challengerWins };
+    logDiceRoll(challenger, cRoll, cBuff);
+    logDiceRoll(target, tRoll, tBuff);
 
     if (!challengerWins) {
       if (defenseType === 'dribble') {
@@ -6564,22 +6709,15 @@
   async function writePresenceHeartbeat(){
     if (!conferenceRoom || !window.storage) return;
     try {
-      const key = presenceKeyForRoom(conferenceRoom);
-      let map = {};
-      try {
-        const result = await window.storage.get(key, true);
-        if (result && result.value) map = JSON.parse(result.value);
-      } catch (e) { map = {}; }
-      const now = Date.now();
-      // generous prune window — shared storage writes are currently unreliable,
-      // so a couple of missed heartbeats shouldn't make someone look like they left
-      Object.keys(map).forEach(id => { if (now - map[id].lastSeen > 60000) delete map[id]; });
-      map[myParticipantId] = { name: myName, lastSeen: now };
-      const payload = JSON.stringify(map);
+      // Each participant writes ONLY their own key — no shared blob means no
+      // possibility of one person's heartbeat overwriting someone else's,
+      // regardless of how many people are heartbeating at once.
+      const myKey = presenceKeyForRoom(conferenceRoom) + '_' + myParticipantId;
+      const payload = JSON.stringify({ name: myName, lastSeen: Date.now() });
       let lastErr = null;
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
-          await window.storage.set(key, payload, true);
+          await window.storage.set(myKey, payload, true);
           lastErr = null;
           break;
         } catch (err) {
@@ -6588,18 +6726,29 @@
         }
       }
       if (lastErr) throw lastErr;
-      presenceMap = map;
-      renderPresenceBalls();
-      if (!conferenceModal.classList.contains('hidden')) renderPresenceList();
+      await fetchPresence(); // rebuild the aggregated view from everyone's individual keys
     } catch (err) { /* quietly ignore — we'll try again on the next heartbeat cycle */ }
   }
 
   async function fetchPresence(){
     if (!conferenceRoom || !window.storage) return;
     try {
-      const result = await window.storage.get(presenceKeyForRoom(conferenceRoom), true);
-      if (!result || !result.value) return;
-      presenceMap = JSON.parse(result.value);
+      const prefix = presenceKeyForRoom(conferenceRoom) + '_';
+      const listResult = await window.storage.list(prefix, true);
+      if (!listResult || !listResult.keys) return;
+      const map = {};
+      for (const key of listResult.keys) {
+        const participantId = key.slice(prefix.length);
+        try {
+          const result = await window.storage.get(key, true);
+          if (result && result.value) map[participantId] = JSON.parse(result.value);
+        } catch (e) { /* skip a bad entry rather than fail the whole fetch */ }
+      }
+      const now = Date.now();
+      // generous prune window — shared storage writes are currently unreliable,
+      // so a couple of missed heartbeats shouldn't make someone look like they left
+      Object.keys(map).forEach(id => { if (now - map[id].lastSeen > 60000) delete map[id]; });
+      presenceMap = map;
       renderPresenceBalls();
       if (!conferenceModal.classList.contains('hidden')) renderPresenceList();
     } catch (err) { /* quietly ignore */ }
@@ -6688,16 +6837,56 @@
     if (wasNearBottom) notepadBody.scrollTop = notepadBody.scrollHeight;
   }
 
+  const diceRollBody = document.getElementById('diceRollBody');
+  function renderDiceRollLog(){
+    diceRollBody.innerHTML = '';
+    if (diceRollLog.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'presence-empty';
+      empty.textContent = 'No rolls yet.';
+      diceRollBody.appendChild(empty);
+      return;
+    }
+    const wasNearBottom = diceRollBody.scrollHeight - diceRollBody.scrollTop - diceRollBody.clientHeight < 40;
+    diceRollLog.forEach(entry => {
+      const row = document.createElement('div');
+      row.className = 'notepad-entry';
+      const time = document.createElement('span');
+      time.className = 'notepad-time';
+      time.textContent = entry.time;
+      row.appendChild(time);
+      row.appendChild(document.createTextNode(entry.label + ' = ' + entry.roll + '+' + entry.buff + '=' + entry.total));
+      diceRollBody.appendChild(row);
+    });
+    if (wasNearBottom) diceRollBody.scrollTop = diceRollBody.scrollHeight;
+  }
+
+  let activeNotepadTab = 'activity';
+  function setNotepadTab(tab){
+    activeNotepadTab = tab;
+    document.getElementById('notepadTabActivity').classList.toggle('active', tab === 'activity');
+    document.getElementById('notepadTabDice').classList.toggle('active', tab === 'dice');
+    notepadBody.style.display = tab === 'activity' ? 'block' : 'none';
+    diceRollBody.style.display = tab === 'dice' ? 'block' : 'none';
+  }
+  document.getElementById('notepadTabActivity').addEventListener('click', () => setNotepadTab('activity'));
+  document.getElementById('notepadTabDice').addEventListener('click', () => setNotepadTab('dice'));
+
   document.getElementById('notepadBtn').addEventListener('click', () => {
     notepadPanel.classList.toggle('hidden');
-    if (!notepadPanel.classList.contains('hidden')) renderActivityLog();
+    if (!notepadPanel.classList.contains('hidden')) { renderActivityLog(); renderDiceRollLog(); }
   });
   document.getElementById('closeNotepadBtn').addEventListener('click', () => {
     notepadPanel.classList.add('hidden');
   });
   document.getElementById('clearLogBtn').addEventListener('click', () => {
-    activityLog = [];
-    renderActivityLog();
+    if (activeNotepadTab === 'dice') {
+      diceRollLog = [];
+      renderDiceRollLog();
+    } else {
+      activityLog = [];
+      renderActivityLog();
+    }
     markDirty();
   });
 
@@ -6935,6 +7124,7 @@
         greyZoneColor: document.getElementById('greyZoneColor').value,
         matchSim,
         activityLog,
+        diceRollLog,
         pendingChallengeResponse, pendingDribbleOutcome
       };
       const fullPayload = JSON.stringify(state);
@@ -7062,6 +7252,7 @@
     if (typeof state.rosterTeamIdSeq === 'number') rosterTeamIdSeq = state.rosterTeamIdSeq;
     if ('matchSim' in state) { matchSim = state.matchSim; renderMatchSim(); }
     if (Array.isArray(state.activityLog)) activityLog = state.activityLog;
+    if (Array.isArray(state.diceRollLog)) { diceRollLog = state.diceRollLog; renderDiceRollLog(); }
     if ('pendingChallengeResponse' in state) pendingChallengeResponse = state.pendingChallengeResponse || null;
     if ('pendingDribbleOutcome' in state) pendingDribbleOutcome = state.pendingDribbleOutcome || null;
 
