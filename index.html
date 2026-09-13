@@ -2169,13 +2169,13 @@
     <div id="conferenceNotInRoom">
       <label>Your Name</label>
       <input type="text" class="team-name-input" id="conferenceNameInput" placeholder="Enter your name" maxlength="20">
-      <button class="btn" id="createConferenceBtn" type="button" style="width:100%; margin-top:10px;">Create Conference</button>
+      <button class="btn" id="createConferenceBtn" type="button" style="width:100%; margin-top:10px;">Host Room</button>
 
       <div class="pane-divider"></div>
 
       <label>Join Existing</label>
       <input type="text" class="team-name-input" id="conferenceCodeInput" placeholder="Enter room code" maxlength="6" style="text-transform:uppercase;">
-      <button class="btn" id="joinConferenceBtn" type="button" style="width:100%; margin-top:10px;">Join Conference</button>
+      <button class="btn" id="joinConferenceBtn" type="button" style="width:100%; margin-top:10px;">Join Room</button>
     </div>
 
     <div id="conferenceInRoom" style="display:none;">
@@ -2424,80 +2424,79 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
 // ============================================================
-// Supabase integration — replaces window.storage (Claude-sandbox-only)
-// with a real backend, since this file runs as a plain static page.
-// Two parts, working together:
-//   1. A window.storage-compatible shim backed by a Postgres table,
-//      for PERSISTENT state (pins, Saves, rosters — survives a reload).
-//   2. A Realtime Broadcast channel for LIVE pin-drag positions —
-//      momentary, not stored, but delivered instantly to everyone
-//      currently connected, which is what makes dragging actually
-//      visible in real time instead of catching up every second or two.
+// PeerJS integration — replaces window.storage (Claude-sandbox-only)
+// with real peer-to-peer connections, using PeerJS's free public
+// signaling server. No account, no database, no paid server.
 //
-// ---- FILL THESE IN with your own Supabase project's values ----
-// Project Settings -> API -> Project URL / anon public key.
-// The anon key is MEANT to be public in client-side code like this —
-// it's not a secret; real protection comes from the table's Row Level
-// Security policy, not from hiding this key.
-// ==================================================================
-const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL_HERE';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
-// ==================================================================
-
+// How it works: window.storage.get/set is rebuilt here to be backed
+// by an in-memory store that's kept fresh by direct PeerJS data
+// connections, instead of a remote database. Everything else in this
+// file — saveState, applyLoadedState, the per-pin merge logic, the
+// logical clock, all of it — is completely untouched, since it only
+// ever talks to window.storage's get/set interface, never caring how
+// that's actually implemented underneath.
+//
+// Topology: whoever hosts is the hub. Guests connect only to the
+// host, not to each other — so the host also relays anything a guest
+// sends out to every other guest. This means the host needs to stay
+// connected for the room to keep working; if they close their tab,
+// that session's live state goes with them (there's no separate
+// server holding it). For a friend group playing one session
+// together with the host present throughout, this is a non-issue.
+// ============================================================
 (function(){
-  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  window.__supabaseClient = supabaseClient; // exposed so the rest of the app can reach it for broadcast
+  const PEER_PREFIX = 'blctb-'; // namespaces our room codes on PeerJS's shared public signaling server
 
-  // ---- Room ID: from ?room=xxxx in the URL if present ----
-  // This is IN ADDITION to the app's own Conference room-code system, not a
-  // replacement for it — if a room is present in the URL, we auto-join it
-  // the same way typing the code into the Conference modal would.
-  const urlParams = new URLSearchParams(window.location.search);
-  window.__urlRoomId = urlParams.get('room') || null;
+  let peer = null;
+  let isHost = false;
+  let hostConn = null;     // guest's single connection TO the host
+  let guestConns = {};     // host's connections FROM each guest, keyed by their peer id
+  let localStore = {};     // "shared" (room) keys -> value, kept fresh by incoming peer messages
+  let personalStore = {};  // "personal" keys -> value — purely local, never sent over the wire
 
-  // ---- Persistent storage shim (window.storage-compatible) ----
-  // Backed by a single table: board_storage(key text primary key, value text).
-  // "Personal" (non-shared) keys get a per-browser ID appended, since this
-  // backend has no built-in per-visitor isolation the way Claude's sandbox
-  // storage does — without this, two different solo visitors would collide.
-  function getBrowserId(){
-    let id;
-    try { id = localStorage.getItem('blc_browser_id'); } catch (e) { /* unavailable */ }
-    if (!id) {
-      id = 'b' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-      try { localStorage.setItem('blc_browser_id', id); } catch (e) { /* private browsing, etc */ }
+  function broadcastToGuests(key, value, excludeId){
+    Object.keys(guestConns).forEach(id => {
+      if (id === excludeId) return;
+      const conn = guestConns[id];
+      if (conn && conn.open) conn.send({ type: 'kv', key, value });
+    });
+  }
+
+  function handleIncomingKV(key, value, fromGuestId){
+    localStore[key] = value;
+    if (isHost && fromGuestId) {
+      // guests aren't connected to each other directly — the host relays
+      broadcastToGuests(key, value, fromGuestId);
     }
-    return id;
+  }
+
+  function wireConnection(conn, isFromGuest){
+    conn.on('data', (msg) => {
+      if (!msg || msg.type !== 'kv') return;
+      handleIncomingKV(msg.key, msg.value, isFromGuest ? conn.peer : null);
+    });
   }
 
   window.storage = {
     async get(key, shared){
-      const effectiveKey = shared ? key : (key + '_' + getBrowserId());
-      const { data, error } = await supabaseClient
-        .from('board_storage')
-        .select('value')
-        .eq('key', effectiveKey)
-        .maybeSingle();
-      if (error) throw new Error('Storage GET failed: ' + error.message);
-      if (!data || data.value === null || data.value === undefined) return null;
-      return { key, value: data.value, shared: !!shared };
+      const store = shared ? localStore : personalStore;
+      if (!(key in store)) return null;
+      return { key, value: store[key], shared: !!shared };
     },
     async set(key, value, shared){
-      const effectiveKey = shared ? key : (key + '_' + getBrowserId());
       const body = typeof value === 'string' ? value : JSON.stringify(value);
-      const { error } = await supabaseClient
-        .from('board_storage')
-        .upsert({ key: effectiveKey, value: body, updated_at: new Date().toISOString() });
-      if (error) throw new Error('Storage SET failed: ' + error.message);
-      return { key, value, shared: !!shared };
+      if (!shared) { personalStore[key] = body; return { key, value: body, shared: false }; }
+      localStore[key] = body;
+      if (isHost) broadcastToGuests(key, body, null);
+      else if (hostConn && hostConn.open) hostConn.send({ type: 'kv', key, value: body });
+      return { key, value: body, shared: true };
     },
     async delete(key, shared){
-      const effectiveKey = shared ? key : (key + '_' + getBrowserId());
-      const { error } = await supabaseClient.from('board_storage').delete().eq('key', effectiveKey);
-      if (error) throw new Error('Storage DELETE failed: ' + error.message);
+      const store = shared ? localStore : personalStore;
+      delete store[key];
       return { key, deleted: true, shared: !!shared };
     },
     async list(prefix, shared){
@@ -2505,37 +2504,75 @@ const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
     }
   };
 
-  // ---- Live broadcast channel for real-time pin dragging ----
-  // Set up once a Conference room is actually known. The rest of the app
-  // calls window.__joinBroadcastRoom(roomId) when a room is created/joined,
-  // and window.broadcastPinMove(pinId, x, y) during a drag.
-  let broadcastChannel = null;
-  let currentBroadcastRoomId = null;
-
-  window.__joinBroadcastRoom = function(roomId){
-    if (!roomId || roomId === currentBroadcastRoomId) return;
-    if (broadcastChannel) supabaseClient.removeChannel(broadcastChannel);
-    currentBroadcastRoomId = roomId;
-    broadcastChannel = supabaseClient.channel('room_' + roomId);
-    broadcastChannel.on('broadcast', { event: 'pin_move' }, (msg) => {
-      window.__onRemotePinMove && window.__onRemotePinMove(msg.payload);
+  // ---- Host / Join lifecycle, called by the existing Conference UI ----
+  window.__peerHostRoom = function(roomCode){
+    return new Promise((resolve, reject) => {
+      isHost = true;
+      peer = new Peer(PEER_PREFIX + roomCode);
+      peer.on('open', () => resolve(true));
+      peer.on('error', (err) => reject(err));
+      peer.on('connection', (conn) => {
+        guestConns[conn.peer] = conn;
+        conn.on('open', () => {
+          // catch the newly-joined guest up on everything we currently know,
+          // then explicitly tell them they're caught up
+          Object.entries(localStore).forEach(([key, value]) => {
+            conn.send({ type: 'kv', key, value });
+          });
+          conn.send({ type: 'sync-complete' });
+        });
+        wireConnection(conn, true);
+        conn.on('close', () => { delete guestConns[conn.peer]; });
+      });
     });
-    broadcastChannel.subscribe();
   };
 
-  window.__leaveBroadcastRoom = function(){
-    if (broadcastChannel) supabaseClient.removeChannel(broadcastChannel);
-    broadcastChannel = null;
-    currentBroadcastRoomId = null;
+  window.__peerJoinRoom = function(roomCode){
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      isHost = false;
+      peer = new Peer();
+      const timeout = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        reject(new Error('Connection timed out — check the room code, and make sure the host still has the board open.'));
+      }, 8000);
+      peer.on('open', () => {
+        hostConn = peer.connect(PEER_PREFIX + roomCode, { reliable: true });
+        wireConnection(hostConn, false); // handles ongoing 'kv' updates
+        hostConn.on('data', (msg) => {
+          // resolve only once the host confirms we're fully caught up, not
+          // just once the raw connection opens — avoids a race where we'd
+          // call loadState() before the host's initial data has arrived
+          if (msg && msg.type === 'sync-complete' && !settled) {
+            settled = true;
+            clearTimeout(timeout);
+            resolve(true);
+          }
+        });
+        hostConn.on('error', (err) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeout);
+          reject(err);
+        });
+        hostConn.on('close', () => { hostConn = null; });
+      });
+      peer.on('error', (err) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        reject(err);
+      });
+    });
   };
 
-  window.broadcastPinMove = function(pinId, x, y){
-    if (!broadcastChannel) return;
-    broadcastChannel.send({
-      type: 'broadcast',
-      event: 'pin_move',
-      payload: { pinId, x, y }
-    });
+  window.__peerLeaveRoom = function(){
+    if (peer) { try { peer.destroy(); } catch (e) {} peer = null; }
+    isHost = false;
+    hostConn = null;
+    guestConns = {};
+    localStore = {};
   };
 })();
 </script>
@@ -3955,7 +3992,7 @@ const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
     el.addEventListener('pointercancel', onPinPointerUp);
   }
 
-  function onPinPointerMoveCore(e){
+  function onPinPointerMove(e){
     if (!dragState || e.pointerId !== dragState.pointerId) return;
     const rect = field.getBoundingClientRect();
 
@@ -4025,29 +4062,6 @@ const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
       }
     }
   }
-
-  let lastPinBroadcastAt = 0;
-  function onPinPointerMove(e){
-    onPinPointerMoveCore(e);
-    if (!dragState) return;
-    // Live-broadcast this pin's position so everyone else's screen can show
-    // it actually moving in real time, not just once it's confirmed. Throttled
-    // to roughly 15/sec — smooth enough to watch, without flooding the channel.
-    const now = Date.now();
-    if (now - lastPinBroadcastAt < 65) return;
-    lastPinBroadcastAt = now;
-    broadcastPinMove(dragState.id, dragState.lastX, dragState.lastY);
-  }
-
-  window.__onRemotePinMove = function(payload){
-    if (!payload || typeof payload.pinId !== 'number') return;
-    // don't fight with a pin we're currently dragging ourselves
-    if (dragState && dragState.id === payload.pinId) return;
-    const el = pinLayer.querySelector('[data-id="' + payload.pinId + '"]');
-    if (!el) return; // not currently on the field (e.g. benched) — ignore
-    el.style.left = payload.x + '%';
-    el.style.top = payload.y + '%';
-  };
 
   function onPinPointerUp(e){
     if (!dragState || e.pointerId !== dragState.pointerId) return;
@@ -6611,7 +6625,6 @@ const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
       if (data.room) {
         conferenceRoom = data.room;
         STORAGE_KEY = boardKeyForRoom(conferenceRoom);
-        if (window.__joinBroadcastRoom) window.__joinBroadcastRoom(conferenceRoom);
       }
     } catch (err) { /* quietly ignore */ }
   }
@@ -6619,7 +6632,6 @@ const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
   async function switchToRoomAndReload(room){
     conferenceRoom = room;
     STORAGE_KEY = boardKeyForRoom(room);
-    if (window.__joinBroadcastRoom) window.__joinBroadcastRoom(room);
     localVersion = 0;
     localDirty = false;
     const restored = await loadState();
@@ -6730,13 +6742,20 @@ const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
     myName = name;
     const code = generateRoomCode();
     const btn = document.getElementById('createConferenceBtn');
-    btn.disabled = true; btn.textContent = 'Creating\u2026';
+    btn.disabled = true; btn.textContent = 'Starting\u2026';
+    try {
+      await window.__peerHostRoom(code);
+    } catch (err) {
+      btn.disabled = false; btn.textContent = 'Host Room';
+      showToast('Couldn\u2019t start hosting: ' + (err && err.message ? err.message : err), 'error');
+      return;
+    }
     await switchToRoomAndReload(code);
     await saveMyIdentity();
     await writePresenceHeartbeat();
-    btn.disabled = false; btn.textContent = 'Create Conference';
+    btn.disabled = false; btn.textContent = 'Host Room';
     updateConferenceModalView();
-    showToast('Conference created \u2014 code is ' + code, 'win');
+    showToast('Room hosted \u2014 code is ' + code, 'win');
   });
 
   document.getElementById('joinConferenceBtn').addEventListener('click', async () => {
@@ -6746,23 +6765,20 @@ const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
     if (!code) { showToast('Enter a room code.', 'error'); return; }
     const btn = document.getElementById('joinConferenceBtn');
     btn.disabled = true; btn.textContent = 'Joining\u2026';
-    let exists = false;
     try {
-      const result = await window.storage.get(boardKeyForRoom(code), true);
-      exists = !!(result && result.value);
-    } catch (err) { exists = false; }
-    if (!exists) {
-      btn.disabled = false; btn.textContent = 'Join Conference';
-      showToast('Room not found \u2014 check the code.', 'error');
+      await window.__peerJoinRoom(code);
+    } catch (err) {
+      btn.disabled = false; btn.textContent = 'Join Room';
+      showToast('Couldn\u2019t join \u2014 ' + (err && err.message ? err.message : 'check the code and that the host is still online.'), 'error');
       return;
     }
     myName = name;
     await switchToRoomAndReload(code);
     await saveMyIdentity();
     await writePresenceHeartbeat();
-    btn.disabled = false; btn.textContent = 'Join Conference';
+    btn.disabled = false; btn.textContent = 'Join Room';
     updateConferenceModalView();
-    showToast('Joined the conference.', 'win');
+    showToast('Joined the room.', 'win');
   });
 
   document.getElementById('copyRoomCodeBtn').addEventListener('click', () => {
@@ -6777,9 +6793,9 @@ const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
   });
 
   document.getElementById('leaveConferenceBtn').addEventListener('click', async () => {
+    window.__peerLeaveRoom();
     conferenceRoom = null;
     STORAGE_KEY = 'blueLockBoardState_solo';
-    if (window.__leaveBroadcastRoom) window.__leaveBroadcastRoom();
     localVersion = 0;
     localDirty = false;
     presenceMap = {};
@@ -6789,7 +6805,7 @@ const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
     if (!restored) addPin('#1e8fff', '1');
     updateConferenceModalView();
     conferenceModal.classList.add('hidden');
-    showToast('Left the conference.', 'win');
+    showToast('Left the room.', 'win');
   });
 
   // ---- Persistence: whole board survives closing/reopening, and now syncs live across everyone ----
@@ -7156,22 +7172,16 @@ const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
 
   (async function initBoard(){
     await loadMyIdentity(); // may reconnect us to a room from a previous session
-    if (window.__urlRoomId && window.__urlRoomId !== conferenceRoom) {
-      // a room was specified directly in the URL (?room=xxxx) — join it,
-      // taking priority over whatever room (if any) we'd otherwise reconnect to
-      await switchToRoomAndReload(window.__urlRoomId);
-    } else {
-      const restored = await loadState();
-      if (!restored) {
-        // fresh board — seed a starter formation so the field isn't empty
-        addPin('#1e8fff', '1');
-      }
+    const restored = await loadState();
+    if (!restored) {
+      // fresh board — seed a starter formation so the field isn't empty
+      addPin('#1e8fff', '1');
     }
     if (conferenceRoom) {
       await writePresenceHeartbeat();
       renderPresenceBalls();
     }
-    setInterval(syncTick, 1200);
+    setInterval(syncTick, 250); // safe to run this tight — window.storage is now purely local memory under the PeerJS shim, the real network transfer already happened via push, not here
   })();
 })();
 </script>
