@@ -6646,6 +6646,13 @@
 
   function renderSaves(){
     markDirty();
+    refreshSavesDisplay();
+  }
+
+  // Just repaints the list from current data — for cases like opening the
+  // panel or loading the page, where nothing actually changed and marking
+  // dirty would trigger a pointless extra sync.
+  function refreshSavesDisplay(){
     savesList.innerHTML = '';
     if (saves.length === 0) {
       savesList.appendChild(savesEmpty);
@@ -6739,6 +6746,7 @@
 
   document.getElementById('saveCurrentBtn').addEventListener('click', createSave);
   document.getElementById('savesBtn').addEventListener('click', () => {
+    refreshSavesDisplay();
     savesOverlay.classList.remove('hidden');
   });
   document.getElementById('savesBackBtn').addEventListener('click', () => {
@@ -8607,6 +8615,7 @@
       renderPresenceBalls();
     }
     renderTeams();
+    refreshSavesDisplay();
     renderCharacterList();
     refreshLoadCharacterDropdown();
     setInterval(syncTick, 250); // safe to run this tight — window.storage is now purely local memory under the PeerJS shim, the real network transfer already happened via push, not here
