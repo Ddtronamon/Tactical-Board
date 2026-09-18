@@ -1111,6 +1111,74 @@
     .tutorial-sidebar{ flex-direction:row; flex-wrap:wrap; position:static; flex-basis:auto; }
   }
 
+  .tc-layout{
+    display:flex;
+    gap:20px;
+    max-width:1100px;
+    width:100%;
+    margin:0 auto;
+    align-items:flex-start;
+  }
+  .tc-field-wrap{ flex:1; min-width:0; }
+  .tc-field{
+    position:relative;
+    width:100%;
+    aspect-ratio:1240/700;
+    border-radius:10px;
+    overflow:hidden;
+    border:1px solid var(--line);
+    cursor:crosshair;
+    margin-bottom:14px;
+  }
+  .tc-field-svg{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .tc-pins{ position:absolute; inset:0; }
+  .tc-pin{
+    position:absolute;
+    width:7.5%; aspect-ratio:1;
+    max-width:34px; max-height:34px;
+    min-width:22px; min-height:22px;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:var(--blue);
+    border:2px solid rgba(255,255,255,.85);
+    color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:800;
+    cursor:grab;
+    box-shadow:0 2px 6px rgba(0,0,0,.45);
+  }
+  .tc-pin.dragging{ cursor:grabbing; filter:brightness(1.1); }
+  .tc-pin.active{ outline:3px solid #fff; outline-offset:1px; }
+  .tc-bench{
+    display:grid;
+    grid-template-columns:repeat(8, 1fr);
+    gap:6px;
+  }
+  .tc-bench-seat{
+    aspect-ratio:1;
+    border-radius:50%;
+    background:var(--panel-2);
+    border:2px dashed var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:800; color:var(--muted);
+    cursor:pointer;
+  }
+  .tc-bench-seat.filled{
+    background:var(--blue);
+    border:2px solid rgba(255,255,255,.85);
+    color:#fff;
+  }
+  .tc-bench-seat.active{ outline:3px solid #fff; outline-offset:1px; }
+  .tc-editor{
+    flex:0 0 260px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px;
+    max-height:640px;
+    overflow-y:auto;
+  }
+
   .team-stats-empty{
     color:var(--muted);
     font-size:13px;
@@ -1933,7 +2001,7 @@
         <button class="btn" id="savesBtn" type="button">Saves</button>
         <button class="btn" id="conferenceBtn" type="button">Conference</button>
         <button class="btn" id="notepadBtn" type="button">Notepad</button>
-        <button class="btn" id="saveBoardBtn" type="button" title="Saves the board for everyone with this link &mdash; their view refreshes automatically within a few seconds">Save Board</button>
+        <button class="btn" id="teamCreatorBtn" type="button">Team Creator</button>
         <label class="color-control" title="Field border color">
           <span>Border</span>
           <input type="color" id="greyZoneColor" value="#b7bbbd">
@@ -2256,6 +2324,126 @@
       <option value="">&mdash; No team selected &mdash;</option>
     </select>
     <p class="stat-hint">When on, this character's rolls use that team sheet's stats for its position instead of its own stats above.</p>
+  </div>
+</div>
+
+<div class="team-stats-overlay hidden" id="teamCreatorOverlay">
+  <div id="teamCreatorListView">
+    <div class="team-stats-header">
+      <h2>Team Creator</h2>
+      <div class="team-stats-header-actions">
+        <button class="btn" id="teamCreatorNewBtn" type="button">+ New Team</button>
+        <button class="btn" id="teamCreatorBackBtn" type="button">&larr; Back to Board</button>
+      </div>
+    </div>
+    <div class="team-stats-body" id="teamCreatorList">
+      <p class="team-stats-empty" id="teamCreatorListEmpty">No teams yet. Build one with "+ New Team" &mdash; 11 starters and up to 8 subs, saved for quick access to either side of the field.</p>
+    </div>
+  </div>
+
+  <div id="teamCreatorEditView" style="display:none;">
+    <div class="team-stats-header">
+      <h2 id="teamCreatorEditTitle">New Team</h2>
+      <div class="team-stats-header-actions">
+        <input type="text" class="team-name-input" id="teamCreatorNameInput" placeholder="Team name" maxlength="24">
+        <button class="btn" id="teamCreatorSaveBtn" type="button">Save Team</button>
+        <button class="btn" id="teamCreatorCancelBtn" type="button">&larr; Cancel</button>
+      </div>
+    </div>
+    <div class="roster-team-header" style="justify-content:center;">
+      <label>Kit</label>
+      <div class="swatches" id="tcTeamSwatches"></div>
+      <div class="swatches" id="tcTeamSwatches2"></div>
+      <div class="style-grid" id="tcTeamStyles"></div>
+    </div>
+    <p class="stat-hint" style="text-align:center;">Click an empty spot to place a starter (up to 11). Drag any pin to reposition it. Click an existing pin to edit it.</p>
+    <div class="tc-layout">
+      <div class="tc-field-wrap">
+        <div class="tc-field" id="tcField">
+          <svg viewBox="0 0 1240 700" xmlns="http://www.w3.org/2000/svg" class="tc-field-svg">
+            <rect x="0" y="0" width="1240" height="700" fill="#2d6b34"/>
+            <g stroke="rgba(255,255,255,.55)" stroke-width="3" fill="none">
+              <rect x="8" y="8" width="1224" height="684"/>
+              <line x1="620" y1="8" x2="620" y2="692"/>
+              <circle cx="620" cy="350" r="80"/>
+              <rect x="8" y="200" width="140" height="300"/>
+              <rect x="1092" y="200" width="140" height="300"/>
+              <rect x="8" y="270" width="50" height="160"/>
+              <rect x="1182" y="270" width="50" height="160"/>
+            </g>
+          </svg>
+          <div class="tc-pins" id="tcPins"></div>
+        </div>
+        <label>Substitutes <span style="font-weight:400; color:var(--muted);">(up to 8)</span></label>
+        <div class="tc-bench" id="tcBench"></div>
+      </div>
+      <div class="tc-editor" id="tcEditor">
+        <p class="tutorial-subhead" style="margin-top:0;">Player Editor</p>
+        <p class="stat-hint" id="tcEditorEmpty">Click a pin on the field or a sub slot to edit them here.</p>
+        <div id="tcEditorForm" style="display:none;">
+          <div class="character-avatar-row" style="padding:0 0 12px; margin-bottom:12px;">
+            <div class="character-avatar-preview" id="tcAvatarPreview">?</div>
+            <div class="character-avatar-controls">
+              <label class="btn character-avatar-upload-btn" for="tcAvatarInput">Upload Picture</label>
+              <input type="file" id="tcAvatarInput" accept="image/png,image/jpeg,image/webp" style="display:none;">
+              <button class="delete-btn" id="tcAvatarRemoveBtn" type="button" style="display:none;">Remove</button>
+            </div>
+          </div>
+          <label>Name</label>
+          <input type="text" class="team-name-input" id="tcNameInput" placeholder="Player name" maxlength="24" style="width:100%;">
+          <label>Number</label>
+          <input type="text" class="team-name-input" id="tcNumberInput" maxlength="2" inputmode="numeric" style="width:60px;">
+          <label>Position</label>
+          <select class="npc-select" id="tcPositionSelect">
+            <option value="Attackers">Attacker</option>
+            <option value="Midfielders">Midfielder</option>
+            <option value="Defenders">Defender</option>
+            <option value="Goalkeepers">Goalkeeper</option>
+          </select>
+          <label>Stats</label>
+          <div class="stat-grid" id="tcStatGrid"></div>
+          <label class="checkbox-row" style="margin-top:10px;">
+            <input type="checkbox" id="tcSpeedsterCheck">
+            <span>Speedster</span>
+          </label>
+          <label>Talent 1</label>
+          <select class="npc-select" id="tcTalentSelect">
+            <option value="">&mdash; None &mdash;</option>
+            <option value="Sniper Eyes">Sniper Eyes</option>
+            <option value="Assassin Eyes">Assassin Eyes</option>
+            <option value="Predator Eyes">Predator Eyes</option>
+            <option value="Meta-Vision">Meta-Vision</option>
+            <option value="Destroyer Eyes">Destroyer Eyes</option>
+          </select>
+          <label>Talent 2 <span style="font-weight:400; color:var(--muted);">(dual-eyes)</span></label>
+          <select class="npc-select" id="tcTalentSelect2">
+            <option value="">&mdash; None &mdash;</option>
+            <option value="Sniper Eyes">Sniper Eyes</option>
+            <option value="Assassin Eyes">Assassin Eyes</option>
+            <option value="Predator Eyes">Predator Eyes</option>
+            <option value="Meta-Vision">Meta-Vision</option>
+            <option value="Destroyer Eyes">Destroyer Eyes</option>
+          </select>
+          <div class="pane-divider"></div>
+          <label class="checkbox-row">
+            <input type="checkbox" id="tcNpcCheck">
+            <span>NPC Teammate</span>
+          </label>
+          <label>Team Sheet</label>
+          <select class="npc-select" id="tcNpcTeamSelect">
+            <option value="">&mdash; No team selected &mdash;</option>
+          </select>
+          <div class="pane-divider"></div>
+          <label>Load Character</label>
+          <select class="npc-select" id="tcLoadCharacterSelect">
+            <option value="">&mdash; Choose a character &mdash;</option>
+          </select>
+          <button class="btn dash-use-btn" id="tcLoadCharacterBtn" type="button">Load onto This Player</button>
+          <div class="pane-divider"></div>
+          <button class="delete-btn" id="tcDeletePlayerBtn" type="button" style="width:100%;">Delete This Player</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -6176,6 +6364,13 @@
     const snap = chunkSnapshots[chunkNum];
     if (!snap) return false; // no snapshot yet for this chunk
     pins = snap.pins.map(normalizePin);
+    // same reasoning as loadSave — these pins carry whatever updatedAt they
+    // had back when this chunk was originally snapshotted, which could be
+    // well behind the live board's current timestamps by now. Re-stamp so
+    // this explicit "go back to this chunk" action can't be silently
+    // reverted by the next sync tick.
+    const restoreStamp = nextTimestamp();
+    pins.forEach(p => { p.updatedAt = restoreStamp; });
     ball = snap.ball;
     shots = snap.shots;
     scoreA.value = snap.scoreA;
@@ -6288,7 +6483,7 @@
   const LOCAL_LIBRARY_KEY = 'blc_persistent_library';
   function persistTeamsAndRostersLocally(){
     try {
-      localStorage.setItem(LOCAL_LIBRARY_KEY, JSON.stringify({ teams, teamIdSeq, characters, characterIdSeq }));
+      localStorage.setItem(LOCAL_LIBRARY_KEY, JSON.stringify({ teams, teamIdSeq, characters, characterIdSeq, saves, saveIdSeq, savedTeams, savedTeamIdSeq }));
     } catch (e) { /* private browsing / storage disabled — nothing we can do */ }
   }
   function loadTeamsAndRostersFromLocal(){
@@ -6300,6 +6495,10 @@
       if (typeof saved.teamIdSeq === 'number') teamIdSeq = saved.teamIdSeq;
       if (Array.isArray(saved.characters)) characters = saved.characters;
       if (typeof saved.characterIdSeq === 'number') characterIdSeq = saved.characterIdSeq;
+      if (Array.isArray(saved.saves)) saves = saved.saves;
+      if (typeof saved.saveIdSeq === 'number') saveIdSeq = saved.saveIdSeq;
+      if (Array.isArray(saved.savedTeams)) savedTeams = saved.savedTeams;
+      if (typeof saved.savedTeamIdSeq === 'number') savedTeamIdSeq = saved.savedTeamIdSeq;
     } catch (e) { /* corrupted or unavailable — just start with an empty library */ }
   }
 
@@ -6511,6 +6710,14 @@
     const snapshot = JSON.parse(JSON.stringify(save)); // never let the board mutate the saved copy
 
     pins = snapshot.pins.map(normalizePin);
+    // The pins inside a save still carry whatever updatedAt they had at the
+    // moment the save was originally made — potentially long stale by now.
+    // Without re-stamping, the very next sync tick would compare those old
+    // timestamps against the live board's newer ones and silently lose,
+    // undoing the load a moment after it visually appeared to work. This
+    // is a deliberate, explicit action — it should always win.
+    const loadStamp = nextTimestamp();
+    pins.forEach(p => { p.updatedAt = loadStamp; });
     ball = snapshot.ball;
     shots = snapshot.shots;
 
@@ -7024,6 +7231,488 @@
   document.getElementById('tutorialBackBtn').addEventListener('click', () => {
     document.getElementById('tutorialOverlay').classList.add('hidden');
   });
+
+  // ============================================================
+  // Team Creator — build a full 11 (starters) + 8 (subs) team on its
+  // own formation field, edit each player's full profile (same fields
+  // as the Character Library, plus a shared team kit since these are
+  // brand-new pins being spawned, not applied onto existing ones),
+  // save it, then deploy the whole thing onto either side of the main
+  // board with one click.
+  // ============================================================
+  let savedTeams = [];
+  let savedTeamIdSeq = 1;
+
+  let editingSavedTeam = null;
+  let editingSavedTeamIsNew = true;
+  let tcPlayerIdSeq = 1;
+  let tcActivePlayerId = null;
+  let tcDraggingPlayerId = null;
+
+  const teamCreatorListEmpty = document.getElementById('teamCreatorListEmpty');
+  const tcField = document.getElementById('tcField');
+  const tcPinsEl = document.getElementById('tcPins');
+  const tcBenchEl = document.getElementById('tcBench');
+  const tcEditorEmpty = document.getElementById('tcEditorEmpty');
+  const tcEditorForm = document.getElementById('tcEditorForm');
+
+  function blankTeamPlayer(x, y, onBench, benchSlot){
+    return {
+      id: tcPlayerIdSeq++,
+      name: '', number: '', position: 'Attackers',
+      stats: { ACC: 0, AGL: 0, STR: 0, SPD: 0, MTL: 0 },
+      speedster: false, talent: null, talent2: null,
+      avatar: null, npc: false, npcTeamId: null,
+      onBench: !!onBench, x: x != null ? x : 50, y: y != null ? y : 50,
+      benchSlot: benchSlot != null ? benchSlot : null
+    };
+  }
+
+  function blankSavedTeam(){
+    return { id: null, name: '', color: COLORS[8], color2: '#FFFFFF', style: 'solid', players: [] };
+  }
+
+  function getTcActivePlayer(){
+    return editingSavedTeam.players.find(p => p.id === tcActivePlayerId);
+  }
+
+  // ---- Team-level kit swatches ----
+  function renderTcTeamSwatches(){
+    const sw1 = document.getElementById('tcTeamSwatches');
+    const sw2 = document.getElementById('tcTeamSwatches2');
+    const styleGrid = document.getElementById('tcTeamStyles');
+    sw1.innerHTML = ''; sw2.innerHTML = ''; styleGrid.innerHTML = '';
+
+    COLORS.forEach(color => {
+      const s = document.createElement('div');
+      s.className = 'swatch';
+      s.style.background = color;
+      s.classList.toggle('active', color === editingSavedTeam.color);
+      s.addEventListener('click', () => { editingSavedTeam.color = color; renderTcTeamSwatches(); renderTcField(); renderTcBench(); });
+      sw1.appendChild(s);
+    });
+    COLORS.forEach(color => {
+      const s = document.createElement('div');
+      s.className = 'swatch';
+      s.style.background = color;
+      s.classList.toggle('active', color === editingSavedTeam.color2);
+      s.addEventListener('click', () => { editingSavedTeam.color2 = color; renderTcTeamSwatches(); renderTcField(); renderTcBench(); });
+      sw2.appendChild(s);
+    });
+    STYLES.forEach(style => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'style-btn';
+      b.classList.toggle('active', style.id === editingSavedTeam.style);
+      const preview = document.createElement('div');
+      preview.className = 'style-swatch';
+      preview.style.background = kitBackground(editingSavedTeam.color, editingSavedTeam.color2, style.id);
+      const label = document.createElement('span');
+      label.textContent = style.label;
+      b.appendChild(preview);
+      b.appendChild(label);
+      b.addEventListener('click', () => { editingSavedTeam.style = style.id; renderTcTeamSwatches(); renderTcField(); renderTcBench(); });
+      styleGrid.appendChild(b);
+    });
+  }
+
+  // ---- Formation field + bench rendering ----
+  function renderTcField(){
+    tcPinsEl.innerHTML = '';
+    editingSavedTeam.players.filter(p => !p.onBench).forEach(player => {
+      const el = document.createElement('div');
+      el.className = 'tc-pin' + (player.id === tcActivePlayerId ? ' active' : '');
+      el.style.left = player.x + '%';
+      el.style.top = player.y + '%';
+      el.style.background = kitBackground(editingSavedTeam.color, editingSavedTeam.color2, editingSavedTeam.style);
+      el.style.color = reactiveTextColor(editingSavedTeam.color);
+      el.textContent = player.number || '';
+      el.dataset.id = player.id;
+      el.addEventListener('pointerdown', (e) => startTcDrag(e, player.id));
+      tcPinsEl.appendChild(el);
+    });
+  }
+
+  function renderTcBench(){
+    tcBenchEl.innerHTML = '';
+    for (let i = 0; i < 8; i++) {
+      const player = editingSavedTeam.players.find(p => p.onBench && p.benchSlot === i);
+      const seat = document.createElement('div');
+      if (!player) {
+        seat.className = 'tc-bench-seat';
+        seat.textContent = '+';
+        seat.title = 'Add a substitute';
+        seat.addEventListener('click', () => {
+          const newPlayer = blankTeamPlayer(null, null, true, i);
+          editingSavedTeam.players.push(newPlayer);
+          renderTcBench();
+          openTcPlayerEditor(newPlayer.id);
+        });
+      } else {
+        seat.className = 'tc-bench-seat filled' + (player.id === tcActivePlayerId ? ' active' : '');
+        seat.style.background = kitBackground(editingSavedTeam.color, editingSavedTeam.color2, editingSavedTeam.style);
+        seat.style.color = reactiveTextColor(editingSavedTeam.color);
+        seat.textContent = player.number || '';
+        seat.title = player.name || ('Sub #' + (player.number || i + 1));
+        seat.addEventListener('click', () => openTcPlayerEditor(player.id));
+      }
+      tcBenchEl.appendChild(seat);
+    }
+  }
+
+  // ---- Click an empty field spot to add a starter ----
+  tcField.addEventListener('click', (e) => {
+    if (tcDraggingPlayerId) return; // a drag just ended on this same click — don't also add a new player
+    if (e.target.closest('.tc-pin')) return; // handled below, by the pin's own pointerup-without-drag
+    const onFieldCount = editingSavedTeam.players.filter(p => !p.onBench).length;
+    if (onFieldCount >= 11) { showToast('11 starters max on the field — use a sub slot below instead.', 'error'); return; }
+    const rect = tcField.getBoundingClientRect();
+    const x = Math.max(2, Math.min(98, ((e.clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(2, Math.min(98, ((e.clientY - rect.top) / rect.height) * 100));
+    const newPlayer = blankTeamPlayer(x, y, false, null);
+    editingSavedTeam.players.push(newPlayer);
+    renderTcField();
+    openTcPlayerEditor(newPlayer.id);
+  });
+
+  // ---- Dragging an existing pin (a plain click with no movement opens its editor instead) ----
+  function startTcDrag(e, playerId){
+    e.stopPropagation();
+    e.preventDefault();
+    const el = e.currentTarget;
+    el.setPointerCapture(e.pointerId);
+    let moved = false;
+
+    function onMove(ev){
+      if (!moved) { moved = true; tcDraggingPlayerId = playerId; el.classList.add('dragging'); }
+      const rect = tcField.getBoundingClientRect();
+      const x = Math.max(2, Math.min(98, ((ev.clientX - rect.left) / rect.width) * 100));
+      const y = Math.max(2, Math.min(98, ((ev.clientY - rect.top) / rect.height) * 100));
+      const player = editingSavedTeam.players.find(p => p.id === playerId);
+      if (player) { player.x = x; player.y = y; }
+      el.style.left = x + '%';
+      el.style.top = y + '%';
+    }
+    function onUp(ev){
+      el.releasePointerCapture(ev.pointerId);
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointerup', onUp);
+      el.classList.remove('dragging');
+      if (!moved) openTcPlayerEditor(playerId);
+      setTimeout(() => { tcDraggingPlayerId = null; }, 0); // let the field's own click handler see this flag first
+    }
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerup', onUp);
+  }
+
+  // ---- Player editor (side panel) ----
+  function openTcPlayerEditor(playerId){
+    tcActivePlayerId = playerId;
+    const player = editingSavedTeam.players.find(p => p.id === playerId);
+    if (!player) { closeTcPlayerEditor(); return; }
+    tcEditorEmpty.style.display = 'none';
+    tcEditorForm.style.display = 'block';
+    document.getElementById('tcNameInput').value = player.name;
+    document.getElementById('tcNumberInput').value = player.number;
+    document.getElementById('tcPositionSelect').value = player.position;
+    document.getElementById('tcSpeedsterCheck').checked = !!player.speedster;
+    document.getElementById('tcTalentSelect').value = player.talent || '';
+    document.getElementById('tcTalentSelect2').value = player.talent2 || '';
+    document.getElementById('tcNpcCheck').checked = !!player.npc;
+    const npcTeamSelectEl = document.getElementById('tcNpcTeamSelect');
+    npcTeamSelectEl.innerHTML = '<option value="">&mdash; No team selected &mdash;</option>';
+    teams.forEach(team => {
+      const opt = document.createElement('option');
+      opt.value = team.id;
+      opt.textContent = team.name;
+      npcTeamSelectEl.appendChild(opt);
+    });
+    npcTeamSelectEl.value = player.npcTeamId != null ? String(player.npcTeamId) : '';
+    refreshTcAvatarPreview();
+    renderTcStatGrid();
+    renderTcField();
+    renderTcBench();
+  }
+
+  function closeTcPlayerEditor(){
+    tcActivePlayerId = null;
+    tcEditorEmpty.style.display = 'block';
+    tcEditorForm.style.display = 'none';
+    renderTcField();
+    renderTcBench();
+  }
+
+  function refreshTcAvatarPreview(){
+    const player = getTcActivePlayer();
+    const preview = document.getElementById('tcAvatarPreview');
+    const removeBtn = document.getElementById('tcAvatarRemoveBtn');
+    if (player && player.avatar) {
+      preview.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = player.avatar;
+      preview.appendChild(img);
+      removeBtn.style.display = 'inline-block';
+    } else {
+      preview.textContent = '?';
+      removeBtn.style.display = 'none';
+    }
+  }
+
+  function renderTcStatGrid(){
+    const player = getTcActivePlayer();
+    if (!player) return;
+    const grid = document.getElementById('tcStatGrid');
+    grid.innerHTML = '';
+    STAT_KEYS.forEach(key => {
+      const row = document.createElement('div');
+      row.className = 'stat-row';
+      const label = document.createElement('span');
+      label.textContent = key;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.inputMode = 'numeric';
+      input.maxLength = 2;
+      input.value = player.stats[key] || 0;
+      input.addEventListener('input', () => {
+        const v = input.value.replace(/[^0-9]/g, '').slice(0, 2);
+        input.value = v;
+        player.stats[key] = v === '' ? 0 : Number(v);
+      });
+      row.appendChild(label);
+      row.appendChild(input);
+      grid.appendChild(row);
+    });
+  }
+
+  document.getElementById('tcNameInput').addEventListener('input', (e) => { const p = getTcActivePlayer(); if (p) p.name = e.target.value; });
+  document.getElementById('tcNumberInput').addEventListener('input', (e) => {
+    const p = getTcActivePlayer();
+    const v = e.target.value.replace(/[^0-9]/g, '').slice(0, 2);
+    e.target.value = v;
+    if (p) { p.number = v; renderTcField(); renderTcBench(); }
+  });
+  document.getElementById('tcPositionSelect').addEventListener('change', (e) => { const p = getTcActivePlayer(); if (p) p.position = e.target.value; });
+  document.getElementById('tcSpeedsterCheck').addEventListener('change', (e) => { const p = getTcActivePlayer(); if (p) p.speedster = e.target.checked; });
+  document.getElementById('tcTalentSelect').addEventListener('change', (e) => { const p = getTcActivePlayer(); if (p) p.talent = e.target.value || null; });
+  document.getElementById('tcTalentSelect2').addEventListener('change', (e) => { const p = getTcActivePlayer(); if (p) p.talent2 = e.target.value || null; });
+  document.getElementById('tcNpcCheck').addEventListener('change', (e) => { const p = getTcActivePlayer(); if (p) p.npc = e.target.checked; });
+  document.getElementById('tcNpcTeamSelect').addEventListener('change', (e) => { const p = getTcActivePlayer(); if (p) p.npcTeamId = e.target.value ? Number(e.target.value) : null; });
+
+  document.getElementById('tcAvatarInput').addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    const p = getTcActivePlayer();
+    if (!file || !p) return;
+    try {
+      p.avatar = await processAvatarFile(file); // reuses the same resize/compress pipeline as Character Library
+      refreshTcAvatarPreview();
+    } catch (err) {
+      showToast(err.message || 'Couldn\u2019t process that image.', 'error');
+    }
+  });
+  document.getElementById('tcAvatarRemoveBtn').addEventListener('click', () => {
+    const p = getTcActivePlayer();
+    if (!p) return;
+    p.avatar = null;
+    refreshTcAvatarPreview();
+  });
+
+  document.getElementById('tcDeletePlayerBtn').addEventListener('click', () => {
+    if (!tcActivePlayerId) return;
+    editingSavedTeam.players = editingSavedTeam.players.filter(p => p.id !== tcActivePlayerId);
+    closeTcPlayerEditor();
+  });
+
+  // ---- Load Character onto a Team Creator player ----
+  const tcLoadCharacterSelect = document.getElementById('tcLoadCharacterSelect');
+  function refreshTcLoadCharacterDropdown(){
+    const prevValue = tcLoadCharacterSelect.value;
+    tcLoadCharacterSelect.innerHTML = '<option value="">&mdash; Choose a character &mdash;</option>';
+    characters.forEach(ch => {
+      const opt = document.createElement('option');
+      opt.value = ch.id;
+      opt.textContent = (ch.name || 'Unnamed') + (ch.number ? ' #' + ch.number : '');
+      tcLoadCharacterSelect.appendChild(opt);
+    });
+    if ([...tcLoadCharacterSelect.options].some(o => o.value === prevValue)) tcLoadCharacterSelect.value = prevValue;
+  }
+  document.getElementById('tcLoadCharacterBtn').addEventListener('click', () => {
+    const p = getTcActivePlayer();
+    if (!p) return;
+    const ch = characters.find(c => c.id === Number(tcLoadCharacterSelect.value));
+    if (!ch) { showToast('Pick a character first.', 'error'); return; }
+    p.name = ch.name;
+    p.number = ch.number;
+    p.position = ch.position;
+    p.stats = { ...ch.stats };
+    p.speedster = ch.speedster;
+    p.talent = ch.talent;
+    p.talent2 = ch.talent2;
+    p.npc = !!ch.npc;
+    p.npcTeamId = ch.npcTeamId;
+    p.avatar = ch.avatar;
+    openTcPlayerEditor(p.id); // re-sync the whole form to reflect the loaded data
+    showToast('Loaded ' + (ch.name || 'that character') + '.', 'win');
+  });
+
+  // ---- List view ----
+  function renderTeamCreatorList(){
+    const list = document.getElementById('teamCreatorList');
+    list.innerHTML = '';
+    if (savedTeams.length === 0) { list.appendChild(teamCreatorListEmpty); return; }
+    savedTeams.forEach(team => {
+      const card = document.createElement('div');
+      card.className = 'roster-card';
+
+      const sw = document.createElement('div');
+      sw.className = 'roster-card-swatch';
+      sw.style.background = kitBackground(team.color, team.color2, team.style);
+
+      const info = document.createElement('div');
+      info.className = 'roster-card-info';
+      const name = document.createElement('div');
+      name.className = 'roster-card-name';
+      name.textContent = team.name || 'Unnamed Team';
+      const count = document.createElement('div');
+      count.className = 'roster-card-count';
+      const onFieldCount = team.players.filter(p => !p.onBench).length;
+      const benchCount = team.players.filter(p => p.onBench).length;
+      count.textContent = onFieldCount + ' starter' + (onFieldCount === 1 ? '' : 's') + ', ' + benchCount + ' sub' + (benchCount === 1 ? '' : 's');
+      info.appendChild(name);
+      info.appendChild(count);
+
+      const actions = document.createElement('div');
+      actions.className = 'roster-card-actions';
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'btn'; editBtn.type = 'button'; editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', () => openTeamCreatorEditor(team));
+
+      const loadLeftBtn = document.createElement('button');
+      loadLeftBtn.className = 'btn'; loadLeftBtn.type = 'button'; loadLeftBtn.textContent = 'Load Left';
+      loadLeftBtn.addEventListener('click', () => loadTeamCreatorTeamToSide(team, 'left'));
+
+      const loadRightBtn = document.createElement('button');
+      loadRightBtn.className = 'btn'; loadRightBtn.type = 'button'; loadRightBtn.textContent = 'Load Right';
+      loadRightBtn.addEventListener('click', () => loadTeamCreatorTeamToSide(team, 'right'));
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'delete-btn'; delBtn.type = 'button'; delBtn.textContent = 'Delete';
+      delBtn.addEventListener('click', () => {
+        savedTeams = savedTeams.filter(t => t.id !== team.id);
+        markDirty();
+        renderTeamCreatorList();
+      });
+
+      actions.appendChild(editBtn);
+      actions.appendChild(loadLeftBtn);
+      actions.appendChild(loadRightBtn);
+      actions.appendChild(delBtn);
+      card.appendChild(sw);
+      card.appendChild(info);
+      card.appendChild(actions);
+      list.appendChild(card);
+    });
+  }
+
+  function openTeamCreatorEditor(team){
+    if (team) {
+      editingSavedTeam = JSON.parse(JSON.stringify(team)); // edit a copy — only commit on Save
+      editingSavedTeamIsNew = false;
+    } else {
+      editingSavedTeam = blankSavedTeam();
+      editingSavedTeamIsNew = true;
+    }
+    tcPlayerIdSeq = Math.max(1, ...editingSavedTeam.players.map(p => p.id), 0) + 1;
+    document.getElementById('teamCreatorEditTitle').textContent = editingSavedTeamIsNew ? 'New Team' : 'Edit Team';
+    document.getElementById('teamCreatorNameInput').value = editingSavedTeam.name;
+    closeTcPlayerEditor();
+    renderTcTeamSwatches();
+    refreshTcLoadCharacterDropdown();
+    renderTcField();
+    renderTcBench();
+    document.getElementById('teamCreatorListView').style.display = 'none';
+    document.getElementById('teamCreatorEditView').style.display = 'block';
+  }
+
+  function closeTeamCreatorEditor(){
+    editingSavedTeam = null;
+    document.getElementById('teamCreatorEditView').style.display = 'none';
+    document.getElementById('teamCreatorListView').style.display = 'block';
+  }
+
+  document.getElementById('teamCreatorBtn').addEventListener('click', () => {
+    renderTeamCreatorList();
+    document.getElementById('teamCreatorListView').style.display = 'block';
+    document.getElementById('teamCreatorEditView').style.display = 'none';
+    document.getElementById('teamCreatorOverlay').classList.remove('hidden');
+  });
+  document.getElementById('teamCreatorBackBtn').addEventListener('click', () => {
+    document.getElementById('teamCreatorOverlay').classList.add('hidden');
+  });
+  document.getElementById('teamCreatorNewBtn').addEventListener('click', () => openTeamCreatorEditor(null));
+  document.getElementById('teamCreatorCancelBtn').addEventListener('click', closeTeamCreatorEditor);
+
+  document.getElementById('teamCreatorSaveBtn').addEventListener('click', () => {
+    editingSavedTeam.name = document.getElementById('teamCreatorNameInput').value.trim() || 'Unnamed Team';
+    if (editingSavedTeam.players.length === 0) { showToast('Add at least one player first.', 'error'); return; }
+    if (editingSavedTeamIsNew) {
+      editingSavedTeam.id = savedTeamIdSeq++;
+      savedTeams.push(editingSavedTeam);
+    } else {
+      const idx = savedTeams.findIndex(t => t.id === editingSavedTeam.id);
+      if (idx >= 0) savedTeams[idx] = editingSavedTeam; else savedTeams.push(editingSavedTeam);
+    }
+    markDirty();
+    persistTeamsAndRostersLocally();
+    renderTeamCreatorList();
+    closeTeamCreatorEditor();
+    showToast('Team saved.', 'win');
+  });
+
+  // ---- Deploy a saved team onto either side of the main board ----
+  function loadTeamCreatorTeamToSide(team, side){
+    const onFieldPlayers = team.players.filter(p => !p.onBench);
+    const benchedPlayers = team.players.filter(p => p.onBench).slice(0, 8);
+    const benchOffset = side === 'right' ? 8 : 0;
+
+    onFieldPlayers.forEach(player => {
+      const x = side === 'right' ? (100 - player.x) : player.x;
+      pins.push(normalizePin({
+        id: idSeq++,
+        x, y: player.y,
+        anchorX: x, anchorY: player.y,
+        color: team.color, color2: team.color2, style: team.style,
+        name: player.name, number: player.number,
+        npcPosition: player.position,
+        stats: { ...player.stats },
+        speedster: player.speedster,
+        talent: player.talent, talent2: player.talent2,
+        npc: player.npc, npcTeamId: player.npcTeamId
+      }));
+    });
+
+    benchedPlayers.forEach((player, i) => {
+      pins.push(normalizePin({
+        id: idSeq++,
+        x: 50, y: 50, anchorX: 50, anchorY: 50,
+        onBench: true, benchSlot: benchOffset + i,
+        color: team.color, color2: team.color2, style: team.style,
+        name: player.name, number: player.number,
+        npcPosition: player.position,
+        stats: { ...player.stats },
+        speedster: player.speedster,
+        talent: player.talent, talent2: player.talent2,
+        npc: player.npc, npcTeamId: player.npcTeamId
+      }));
+    });
+
+    renderPins();
+    renderBench();
+    markDirty();
+    document.getElementById('teamCreatorOverlay').classList.add('hidden');
+    showToast(team.name + ' loaded onto the ' + side + ' side.', 'win');
+  }
 
   // ---- grey zone color ----
   document.getElementById('greyZoneColor').addEventListener('input', (e) => {
@@ -7725,15 +8414,15 @@
 
   async function saveSetupStateIfChanged(){
     if (!window.storage) return;
-    let payload = JSON.stringify({ teams, teamIdSeq, saves, saveIdSeq, characters, characterIdSeq });
+    let payload = JSON.stringify({ teams, teamIdSeq, saves, saveIdSeq, characters, characterIdSeq, savedTeams, savedTeamIdSeq });
     if (payload === lastSavedSetupPayload) return; // nothing setup-related changed — this is the whole point of splitting it out
     if (payload.length > 4_800_000) {
       // too close to the 5MB per-key limit — trim the oldest saved sheets rather than fail outright
-      while (saves.length > 1 && JSON.stringify({ teams, teamIdSeq, saves, saveIdSeq, characters, characterIdSeq }).length > 4_800_000) {
+      while (saves.length > 1 && JSON.stringify({ teams, teamIdSeq, saves, saveIdSeq, characters, characterIdSeq, savedTeams, savedTeamIdSeq }).length > 4_800_000) {
         saves.shift();
       }
       renderSaves();
-      payload = JSON.stringify({ teams, teamIdSeq, saves, saveIdSeq, characters, characterIdSeq });
+      payload = JSON.stringify({ teams, teamIdSeq, saves, saveIdSeq, characters, characterIdSeq, savedTeams, savedTeamIdSeq });
     }
     try {
       let lastErr = null;
@@ -7754,16 +8443,6 @@
       console.error('Setup data save failed:', err);
     }
   }
-
-  const saveBoardBtn = document.getElementById('saveBoardBtn');
-  saveBoardBtn.addEventListener('click', async () => {
-    saveBoardBtn.disabled = true;
-    saveBoardBtn.textContent = 'Saving\u2026';
-    const ok = await saveState();
-    saveBoardBtn.disabled = false;
-    saveBoardBtn.textContent = 'Save Board';
-    if (ok) showToast('Board saved.', 'win');
-  });
 
   // Applies a parsed state object (from load or from a remote poll) to the live board.
   function applyLoadedState(state){
@@ -7801,7 +8480,9 @@
     if (typeof state.saveIdSeq === 'number') saveIdSeq = state.saveIdSeq;
     if (Array.isArray(state.characters)) characters = state.characters;
     if (typeof state.characterIdSeq === 'number') characterIdSeq = state.characterIdSeq;
-    if (Array.isArray(state.teams) || Array.isArray(state.characters)) persistTeamsAndRostersLocally();
+    if (Array.isArray(state.savedTeams)) savedTeams = state.savedTeams;
+    if (typeof state.savedTeamIdSeq === 'number') savedTeamIdSeq = state.savedTeamIdSeq;
+    if (Array.isArray(state.teams) || Array.isArray(state.saves) || Array.isArray(state.characters) || Array.isArray(state.savedTeams)) persistTeamsAndRostersLocally();
     if ('matchSim' in state) { matchSim = state.matchSim; renderMatchSim(); }
     if (Array.isArray(state.activityLog)) activityLog = state.activityLog;
     if (Array.isArray(state.diceRollLog)) { diceRollLog = state.diceRollLog; renderDiceRollLog(); }
