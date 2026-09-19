@@ -3087,7 +3087,7 @@
   let stadiumLook = 'basic'; // 'basic' | 'caged' | 'crowd' — the environment around the pitch
   let hasStartedPlay = false; // only the very first Edit->Play switch should refill actions
   // movement radius is per-pin now (pin.radiusMult), boosted by AGL/Acceleration D20 rolls
-  let ball = { active: false, x: 50, y: 50, offsetX: 0, offsetY: 0 };
+  let ball = { active: false, x: 50, y: 50, offsetX: 0, offsetY: 0, updatedAt: 0 };
   function getCarrierPin(){ return pins.find(p => p.ballCarrier); }
 
   function pinLabel(pin){
@@ -3262,6 +3262,7 @@
     pendingChallengeResponse = null;
     pendingDribbleOutcome = null;
     pendingMoves = {};
+    markDirty();
     pins.forEach(p => {
       p.dashCharges = 2;
       p.dashCooldownChunks = 0;
@@ -4208,6 +4209,7 @@
         circle.removeEventListener('pointermove', onMove);
         circle.removeEventListener('pointerup', onUp);
         circle.removeEventListener('pointercancel', onUp);
+        markDirty();
         renderShots(); // normalize (e.g. shadow visibility) after the drag settles
       }
       circle.addEventListener('pointermove', onMove);
@@ -4294,10 +4296,13 @@
     const shot = shots.find(s => s.id === activeShotId);
     if (!shot) return;
     shot.curveSide = (shot.curveSide || 1) * -1;
+    markDirty();
     renderShots();
   });
   document.getElementById('deleteShotBtn').addEventListener('click', () => {
+    markShotsDeleted([activeShotId]);
     shots = shots.filter(s => s.id !== activeShotId);
+    markDirty();
     closeShotEdit();
   });
 
@@ -4368,6 +4373,7 @@
         x2: x, y2: y,
         curveSide: (x >= ball.x) ? 1 : -1
       });
+      markDirty();
       cancelAiming();
       renderPins();
       return;
@@ -5784,6 +5790,30 @@
 
   let pendingChallengeResponse = null; // { challengerId, targetId, defenseType }
   let pendingDribbleOutcome = null; // { defenderId, dribblerId } — winning defender chooses Steal or Loose Ball
+  // Both are shared, in-progress UI state — without their own timestamp and
+  // merge protection, whoever's save races in next with a stale (often still
+  // null) local copy would silently wipe an active challenge/dribble prompt
+  // out from under the person who's supposed to be responding to it, even
+  // though the challenger's action was already correctly spent.
+  let pendingChallengeResponseUpdatedAt = 0;
+  let pendingDribbleOutcomeUpdatedAt = 0;
+  let lastSyncedPendingChallengeHash = null;
+  let lastSyncedPendingDribbleHash = null;
+
+  function stampPendingChallengeIfChanged(){
+    const hash = JSON.stringify(pendingChallengeResponse);
+    if (hash !== lastSyncedPendingChallengeHash) pendingChallengeResponseUpdatedAt = nextTimestamp();
+  }
+  function updateSyncedPendingChallengeHash(){
+    lastSyncedPendingChallengeHash = JSON.stringify(pendingChallengeResponse);
+  }
+  function stampPendingDribbleIfChanged(){
+    const hash = JSON.stringify(pendingDribbleOutcome);
+    if (hash !== lastSyncedPendingDribbleHash) pendingDribbleOutcomeUpdatedAt = nextTimestamp();
+  }
+  function updateSyncedPendingDribbleHash(){
+    lastSyncedPendingDribbleHash = JSON.stringify(pendingDribbleOutcome);
+  }
 
   function resolveDribbleOutcome(choice){
     if (!pendingDribbleOutcome) return;
@@ -5791,6 +5821,7 @@
     const defender = pins.find(p => p.id === defenderId);
     const dribbler = pins.find(p => p.id === dribblerId);
     pendingDribbleOutcome = null;
+    markDirty();
     if (!defender || !dribbler) { renderPins(); return; }
 
     if (choice === 'steal') {
@@ -5864,6 +5895,7 @@
     challenger.actions -= 1;
 
     pendingChallengeResponse = { challengerId, targetId, defenseType };
+    markDirty();
     showToast(CHALLENGE_LABELS[defenseType] + ' \u2014 waiting on ' + (target.name || 'target') + ' to pick a response stat.', 'win');
     renderPins();
   }
@@ -6240,6 +6272,7 @@
     const challenger = pins.find(p => p.id === challengerId);
     const target = pins.find(p => p.id === targetId);
     pendingChallengeResponse = null;
+    markDirty();
     if (!challenger || !target) { renderPins(); return; }
 
     if (defenseType === 'dribble') {
@@ -6424,6 +6457,7 @@
     pendingChallengeResponse = null;
     pendingDribbleOutcome = null;
     pendingMoves = {};
+    markDirty();
     renderPins();
   }
 
@@ -6639,6 +6673,7 @@
   let saves = [];
   let saveIdSeq = 1;
   let deletedPinIds = []; // tombstones — pin IDs explicitly deleted, so the merge never resurrects them
+  let deletedShotIds = []; // same idea, for shot markers — without this, a deleted shot on a slower/laggier peer's screen can resurrect it for everyone
 
   // Logical clock: real-world device clocks can disagree by a second or more,
   // which would otherwise let an actually-older move "win" a conflict just
@@ -8299,6 +8334,45 @@
     pins.forEach(p => { lastSyncedPinHashes[p.id] = pinContentHash(p); });
   }
 
+  let lastSyncedShotHashes = {};
+
+  function shotContentHash(s){
+    const { updatedAt, ...rest } = s;
+    return JSON.stringify(rest);
+  }
+
+  function stampChangedShots(){
+    const now = nextTimestamp();
+    shots.forEach(s => {
+      if (shotContentHash(s) !== lastSyncedShotHashes[s.id]) s.updatedAt = now;
+    });
+  }
+
+  function updateSyncedShotHashes(){
+    lastSyncedShotHashes = {};
+    shots.forEach(s => { lastSyncedShotHashes[s.id] = shotContentHash(s); });
+  }
+
+  // The ball is a single object, not an array like pins, but it needs the
+  // exact same protection: without its own timestamp and merge treatment,
+  // whoever's save happens to run last would silently overwrite it with
+  // their own possibly-stale local copy, even while pins correctly merge
+  // around it. Same content-hash approach as pins, just for one object.
+  let lastSyncedBallHash = null;
+
+  function ballContentHash(b){
+    const { updatedAt, ...rest } = b;
+    return JSON.stringify(rest);
+  }
+
+  function stampBallIfChanged(){
+    if (ballContentHash(ball) !== lastSyncedBallHash) ball.updatedAt = nextTimestamp();
+  }
+
+  function updateSyncedBallHash(){
+    lastSyncedBallHash = ballContentHash(ball);
+  }
+
   function markPinsDeleted(ids){
     ids.forEach(id => { if (!deletedPinIds.includes(id)) deletedPinIds.push(id); });
     if (deletedPinIds.length > 500) deletedPinIds = deletedPinIds.slice(-500); // avoid unbounded growth over a long session
@@ -8314,6 +8388,29 @@
       const lp = merged[rp.id];
       if (!lp) { merged[rp.id] = rp; return; } // only exists remotely — adopt it
       if ((rp.updatedAt || 0) > (lp.updatedAt || 0)) merged[rp.id] = rp; // remote genuinely newer — take it
+    });
+    return Object.values(merged);
+  }
+
+  function markShotsDeleted(ids){
+    ids.forEach(id => { if (!deletedShotIds.includes(id)) deletedShotIds.push(id); });
+    if (deletedShotIds.length > 500) deletedShotIds = deletedShotIds.slice(-500);
+  }
+
+  // Same exact merge rules as pins — a shot only known locally or only known
+  // remotely survives, a shot known both places keeps whichever side's copy
+  // is genuinely newer, and a tombstoned id never comes back regardless of
+  // what timestamp arrives attached to it.
+  function mergeShots(localShots, remoteShots, remoteDeletedIds){
+    if (remoteDeletedIds && remoteDeletedIds.length) markShotsDeleted(remoteDeletedIds);
+    const deletedSet = new Set(deletedShotIds);
+    const merged = {};
+    localShots.forEach(s => { if (!deletedSet.has(s.id)) merged[s.id] = s; });
+    remoteShots.forEach(rs => {
+      if (deletedSet.has(rs.id)) return;
+      const ls = merged[rs.id];
+      if (!ls) { merged[rs.id] = rs; return; }
+      if ((rs.updatedAt || 0) > (ls.updatedAt || 0)) merged[rs.id] = rs;
     });
     return Object.values(merged);
   }
@@ -8363,12 +8460,36 @@
         if (Array.isArray(remoteState.pins)) {
           remoteState.pins.forEach(p => noteObservedTimestamp(p.updatedAt));
         }
+        if (remoteState.ball) noteObservedTimestamp(remoteState.ball.updatedAt);
+        if (Array.isArray(remoteState.shots)) {
+          remoteState.shots.forEach(s => noteObservedTimestamp(s.updatedAt));
+        }
+        noteObservedTimestamp(remoteState.pendingChallengeResponseUpdatedAt);
+        noteObservedTimestamp(remoteState.pendingDribbleOutcomeUpdatedAt);
       }
       stampChangedPins(); // fresh timestamp on anything that actually changed locally
+      stampBallIfChanged();
+      stampChangedShots();
+      stampPendingChallengeIfChanged();
+      stampPendingDribbleIfChanged();
 
       if (remoteState) {
         if (Array.isArray(remoteState.pins)) {
           pins = mergePins(pins, remoteState.pins.map(normalizePin), remoteState.deletedPinIds);
+        }
+        if (remoteState.ball && (remoteState.ball.updatedAt || 0) > (ball.updatedAt || 0)) {
+          ball = remoteState.ball; // remote genuinely newer — take it, same rule as pins
+        }
+        if (Array.isArray(remoteState.shots)) {
+          shots = mergeShots(shots, remoteState.shots, remoteState.deletedShotIds);
+        }
+        if ((remoteState.pendingChallengeResponseUpdatedAt || 0) > pendingChallengeResponseUpdatedAt) {
+          pendingChallengeResponse = remoteState.pendingChallengeResponse || null;
+          pendingChallengeResponseUpdatedAt = remoteState.pendingChallengeResponseUpdatedAt;
+        }
+        if ((remoteState.pendingDribbleOutcomeUpdatedAt || 0) > pendingDribbleOutcomeUpdatedAt) {
+          pendingDribbleOutcome = remoteState.pendingDribbleOutcome || null;
+          pendingDribbleOutcomeUpdatedAt = remoteState.pendingDribbleOutcomeUpdatedAt;
         }
         mergeMaxChunk(remoteState.maxChunkReached, remoteState.maxChunkResetAt);
       }
@@ -8381,7 +8502,7 @@
       const state = {
         version,
         pins, idSeq, spawnIndex, deletedPinIds,
-        ball, shots, shotIdSeq,
+        ball, shots, shotIdSeq, deletedShotIds,
         hasStartedPlay, maxChunkReached, maxChunkResetAt, stadiumLook,
         chunkSnapshots,
         chunkValue: chunkValue.value,
@@ -8391,7 +8512,8 @@
         matchSim,
         activityLog,
         diceRollLog,
-        pendingChallengeResponse, pendingDribbleOutcome
+        pendingChallengeResponse, pendingChallengeResponseUpdatedAt,
+        pendingDribbleOutcome, pendingDribbleOutcomeUpdatedAt
       };
       const fullPayload = JSON.stringify(state);
       // SHARED storage: everyone in this room reads/writes the same key.
@@ -8413,6 +8535,10 @@
       }
       if (lastErr) throw lastErr;
       updateSyncedPinHashes(); // only mark pins as synced now that the write is actually confirmed successful — marking them earlier meant a failed write would permanently lose track of a pin's unsaved change
+      updateSyncedBallHash();
+      updateSyncedShotHashes();
+      updateSyncedPendingChallengeHash();
+      updateSyncedPendingDribbleHash();
       applyingRemote = true; // the merge may have pulled in pins we didn't have — reflect that without re-flagging dirty
       renderPins();
       applyingRemote = false;
@@ -8483,8 +8609,16 @@
     }
     if (typeof state.idSeq === 'number') idSeq = state.idSeq;
     if (typeof state.spawnIndex === 'number') spawnIndex = state.spawnIndex;
-    if (state.ball) ball = state.ball;
-    if (Array.isArray(state.shots)) shots = state.shots;
+    if (state.ball) {
+      noteObservedTimestamp(state.ball.updatedAt);
+      if ((state.ball.updatedAt || 0) > (ball.updatedAt || 0)) ball = state.ball;
+      updateSyncedBallHash();
+    }
+    if (Array.isArray(state.shots)) {
+      state.shots.forEach(s => noteObservedTimestamp(s.updatedAt));
+      shots = mergeShots(shots, state.shots, state.deletedShotIds);
+      updateSyncedShotHashes();
+    }
     if (typeof state.shotIdSeq === 'number') shotIdSeq = state.shotIdSeq;
     if (typeof state.hasStartedPlay === 'boolean') hasStartedPlay = state.hasStartedPlay;
     if (state.stadiumLook === 'basic' || state.stadiumLook === 'caged' || state.stadiumLook === 'crowd') {
@@ -8514,8 +8648,16 @@
     if ('matchSim' in state) { matchSim = state.matchSim; renderMatchSim(); }
     if (Array.isArray(state.activityLog)) activityLog = state.activityLog;
     if (Array.isArray(state.diceRollLog)) { diceRollLog = state.diceRollLog; renderDiceRollLog(); }
-    if ('pendingChallengeResponse' in state) pendingChallengeResponse = state.pendingChallengeResponse || null;
-    if ('pendingDribbleOutcome' in state) pendingDribbleOutcome = state.pendingDribbleOutcome || null;
+    if (('pendingChallengeResponseUpdatedAt' in state) && (state.pendingChallengeResponseUpdatedAt || 0) > pendingChallengeResponseUpdatedAt) {
+      pendingChallengeResponse = state.pendingChallengeResponse || null;
+      pendingChallengeResponseUpdatedAt = state.pendingChallengeResponseUpdatedAt || 0;
+      updateSyncedPendingChallengeHash();
+    }
+    if (('pendingDribbleOutcomeUpdatedAt' in state) && (state.pendingDribbleOutcomeUpdatedAt || 0) > pendingDribbleOutcomeUpdatedAt) {
+      pendingDribbleOutcome = state.pendingDribbleOutcome || null;
+      pendingDribbleOutcomeUpdatedAt = state.pendingDribbleOutcomeUpdatedAt || 0;
+      updateSyncedPendingDribbleHash();
+    }
 
     modeEditBtn.classList.toggle('active', mode === 'edit');
     modePlayBtn.classList.toggle('active', mode === 'play');
