@@ -3329,6 +3329,7 @@
       const pin = pins.find(p => p.id === activePinId);
       if (!pin) return;
       pin.color = color;
+      markDirty();
       renderPins();
       highlightSwatch(editSwatches, color);
       refreshStylePreviews(pin);
@@ -3345,6 +3346,7 @@
       const pin = pins.find(p => p.id === activePinId);
       if (!pin) return;
       pin.color2 = color;
+      markDirty();
       renderPins();
       highlightSwatch(editSwatches2, color);
       refreshStylePreviews(pin);
@@ -3366,6 +3368,7 @@
       const pin = pins.find(p => p.id === activePinId);
       if (!pin) return;
       pin.style = style.id;
+      markDirty();
       renderPins();
       refreshStylePreviews(pin);
     });
@@ -3517,6 +3520,7 @@
     const pin = pins.find(p => p.id === activePinId);
     if (!pin) return;
     pin.speedster = speedsterCheck.checked;
+    markDirty();
   });
 
   function resetSharedTalentState(pin){
@@ -3539,6 +3543,7 @@
     pin.talentActive = false;
     pin.talentUsesLeft = 10;
     resetSharedTalentState(pin);
+    markDirty();
   });
 
   talentSelect2.addEventListener('change', () => {
@@ -3548,6 +3553,7 @@
     pin.talent2Active = false;
     pin.talent2UsesLeft = 10;
     resetSharedTalentState(pin);
+    markDirty();
   });
 
   function refreshCharacterTab(pin){
@@ -3565,16 +3571,19 @@
     const pin = pins.find(p => p.id === activePinId);
     if (!pin) return;
     pin.npc = npcCheck.checked;
+    markDirty();
   });
   npcPositionSelect.addEventListener('change', () => {
     const pin = pins.find(p => p.id === activePinId);
     if (!pin) return;
     pin.npcPosition = npcPositionSelect.value;
+    markDirty();
   });
   npcTeamSelect.addEventListener('change', () => {
     const pin = pins.find(p => p.id === activePinId);
     if (!pin) return;
     pin.npcTeamId = npcTeamSelect.value ? Number(npcTeamSelect.value) : null;
+    markDirty();
   });
 
   function refreshNpcTab(pin){
@@ -4748,6 +4757,7 @@
   }
 
   function closeEdit(){
+    if (activePinId != null) markDirty(); // safety net — anything edited while this panel was open gets synced, even if a specific field handler forgot to
     activePinId = null;
     editPanel.classList.add('hidden');
   }
@@ -4756,6 +4766,7 @@
     const pin = pins.find(p => p.id === activePinId);
     if (!pin) return;
     pin.name = editName.value;
+    markDirty();
     renderPins();
   });
 
@@ -4777,6 +4788,7 @@
     if (!pin) return;
     pin.number = editNumber.value.replace(/[^0-9]/g, '').slice(0,2);
     editNumber.value = pin.number;
+    markDirty();
     renderPins();
   });
 
@@ -4785,6 +4797,7 @@
     if (!pin) return;
     pin.number = '';
     editNumber.value = '';
+    markDirty();
     renderPins();
   });
 
@@ -5360,6 +5373,7 @@
       const v = input.value.replace(/[^0-9]/g, '').slice(0, 2);
       input.value = v;
       pin.stats[key] = v === '' ? 0 : Number(v);
+      markDirty();
     });
     row.appendChild(label);
     row.appendChild(input);
@@ -6227,6 +6241,12 @@
     const target = pins.find(p => p.id === targetId);
     pendingChallengeResponse = null;
     if (!challenger || !target) { renderPins(); return; }
+
+    if (defenseType === 'dribble') {
+      // defending against a dribble attempt costs an action too, same as
+      // initiating it does for the challenger — spent regardless of outcome
+      target.actions -= 1;
+    }
 
     const challengerStatKey = (defenseType === 'intercept' || defenseType === 'dribble') ? 'AGL' : 'STR';
     const cRoll = Math.floor(Math.random() * 20) + 1;
