@@ -2937,6 +2937,14 @@
     hostConn = null;
     guestConns = {};
     localStore = {};
+    // localStore just went back to empty, but our own copy of everything
+    // (teams, characters, saves, pins, all of it) may not have changed
+    // recently — without forcing these, the content-hash/dirty checks below
+    // would correctly see "nothing new" and skip writing anything back into
+    // the fresh store, leaving a newly joining guest's catch-up sync with
+    // nothing to actually catch up on.
+    localDirty = true;
+    lastSavedSetupPayload = '';
   }
 
   window.__peerHostRoom = function(roomCode){
@@ -2948,7 +2956,13 @@
       peer.on('error', (err) => reject(err));
       peer.on('connection', (conn) => {
         guestConns[conn.peer] = conn;
-        conn.on('open', () => {
+        conn.on('open', async () => {
+          // Guarantee localStore actually has our current data before sending
+          // it — teardownPeerConnection() flags things dirty, but the next
+          // passive 250ms tick might not have run yet if this connection
+          // happened to finish unusually fast. Save explicitly, right now.
+          await saveState({ silent: true });
+          saveSetupStateIfChanged();
           // catch the newly-joined guest up on everything we currently know,
           // then explicitly tell them they're caught up
           Object.entries(localStore).forEach(([key, value]) => {
